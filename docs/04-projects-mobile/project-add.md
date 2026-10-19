@@ -6,6 +6,10 @@
 
 执行位置：**Linux + Paseo 界面** · 分类：项目与手机
 
+> **Paseo 内置 GitHub 克隆入口**
+>
+> Clone from GitHub 提示缺少 gh 时，打开安装菜单，依次选 10 安装、11 登录、12 检查。旧 daemon 仍找不到命令，再等任务结束后选 13。详情见“GitHub CLI 安装与登录”。下方普通 git clone 是另一种方式，不需要重复执行。
+
 ## 方式 A：新建空项目目录
 
 **Linux · 创建项目目录**

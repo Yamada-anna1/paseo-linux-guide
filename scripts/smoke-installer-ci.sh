@@ -15,6 +15,13 @@ exec 9< /dev/null
 mkdir "$GUIDE_TMP_DIR/missing-npm" || exit 1
 printf '#!/bin/sh\nprintf "npm is unavailable in this test environment\\n" >&2\nexit 127\n' > "$GUIDE_TMP_DIR/missing-npm/npm"
 chmod +x "$GUIDE_TMP_DIR/missing-npm/npm" || exit 1
+# Also hide preinstalled system gh so the official download + checksum path is exercised.
+if [[ -e "$HOME/.local/bin/gh" || -L "$HOME/.local/bin/gh" ]]; then
+  printf 'Test precondition failed: user-local gh already exists; refusing to replace it.\n' >&2
+  exit 1
+fi
+printf '#!/bin/sh\nexit 127\n' > "$GUIDE_TMP_DIR/missing-npm/gh"
+chmod +x "$GUIDE_TMP_DIR/missing-npm/gh" || exit 1
 export PATH="$GUIDE_TMP_DIR/missing-npm:$PATH"
 if guide_node_ready; then printf 'Test precondition failed: npm should be unavailable.\n' >&2; exit 1; fi
 
@@ -24,9 +31,18 @@ guide_node_ready || exit 1
 codex --version || exit 1
 cc-switch --version || exit 1
 paseo --version || exit 1
+gh --version || exit 1
+[[ "$(command -v gh)" == "$HOME/.local/bin/gh" ]] || exit 1
+gh auth login --help > "$GUIDE_TMP_DIR/gh-login-help.txt" || exit 1
+gh auth status --help > "$GUIDE_TMP_DIR/gh-status-help.txt" || exit 1
+for flag in --hostname --git-protocol --web; do
+  grep -q -- "$flag" "$GUIDE_TMP_DIR/gh-login-help.txt" || exit 1
+done
 guide_install_all || exit 1
 paseo daemon start --help > "$GUIDE_TMP_DIR/daemon-help.txt" || exit 1
 paseo daemon status --help > "$GUIDE_TMP_DIR/status-help.txt" || exit 1
+paseo daemon stop --help > "$GUIDE_TMP_DIR/stop-help.txt" || exit 1
+grep -q -- '--home' "$GUIDE_TMP_DIR/stop-help.txt" || exit 1
 paseo daemon pair --help > "$GUIDE_TMP_DIR/pair-help.txt" || exit 1
 grep -q -- '--relay' "$GUIDE_TMP_DIR/pair-help.txt" || {
   printf 'Published Paseo CLI lacks the required --relay option.\n' >&2
@@ -34,4 +50,4 @@ grep -q -- '--relay' "$GUIDE_TMP_DIR/pair-help.txt" || {
 }
 
 # No provider login, model calls, pairing QR codes or persistent daemon are created.
-printf '\nReal Linux install + missing-npm recovery + repeat-install + daemon/pair command checks passed.\n'
+printf '\nReal Linux install + missing-npm recovery + verified gh binary + repeat-install + daemon/pair/auth command checks passed.\n'

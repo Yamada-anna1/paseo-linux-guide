@@ -20,7 +20,7 @@ curl -fsSL https://raw.githubusercontent.com/Yamada-anna1/paseo-linux-guide/main
 
 | 选项 | 功能 |
 | --- | --- |
-| 1 | 安装 Codex、CC-Switch、Paseo，自动补齐依赖 |
+| 1 | 安装 Codex、CC-Switch、Paseo、GitHub CLI，自动补齐依赖 |
 | 2 | 只安装 Codex |
 | 3 | 只安装 CC-Switch |
 | 4 | 只安装 Paseo，自动补 Node.js/npm |
@@ -29,17 +29,26 @@ curl -fsSL https://raw.githubusercontent.com/Yamada-anna1/paseo-linux-guide/main
 | 7 | 只读检查版本、路径和服务状态 |
 | 8 | 确认后进行 Codex 官方账号设备码登录 |
 | 9 | 打开 CC-Switch 服务商配置界面 |
+| 10 | 安装 GitHub CLI（gh） |
+| 11 | 确认后使用浏览器设备码登录 GitHub |
+| 12 | 只读检查 GitHub CLI 和登录状态 |
+| 13 | 确认后停止再启动本机 Paseo，以刷新环境 |
 | 0 | 退出菜单 |
 
 ## 已经安装 Codex 和 CC-Switch，但缺少 npm
 
 选 4 即可。安装器会先处理不可用的 Node.js/npm，再安装 Paseo。完成后选 5 启动；需要手机连接再选 6。从零安装则选 1。可正常运行的已有工具会自动跳过，不需要重装。
 
+## GitHub 克隆窗口提示找不到 gh
+
+在运行 Paseo 的同一台 Linux、同一个用户下打开菜单，依次选 10 安装、11 浏览器授权、12 检查。仍报找不到 gh 时，先等正在执行的任务结束，再选 13 并确认；回到 Paseo 重开 Clone from GitHub。13 不会自动执行，也不处理 systemd / 容器的服务定义。
+
 ## 安装器会做什么
 
 - 支持 Linux x86_64 与 ARM64；基础包自动安装处理 apt-get、dnf、yum。其他发行版的缺失依赖会提示，不强行安装。
 - Node.js/npm 不可用或 Node.js 低于 22 时，通过 nvm 安装 Node.js 24 LTS；Alpine 的 musl Node.js 不纳入自动流程。
 - Codex 调用 OpenAI 官方安装器；CC-Switch 调用 SaladDay 项目安装器；Paseo 通过 npm 安装到当前用户的 ~/.local。
+- GitHub CLI 使用固定版本 2.102.0 官方二进制，校验固定 SHA-256 后安装到 ~/.local/bin/gh；不新增软件源，保留已有可用 gh。
 - 在 Bash 配置末尾追加带标记的环境设置，避免重复追加，不覆盖原配置。
 - 任一步骤失败就停止当前流程并返回菜单，不继续启动不存在的命令。
 - 不会自动升级可用工具、修改 SSH 或防火墙，不自动登录账号，也不自动停止已有 daemon。
@@ -64,4 +73,4 @@ curl -fsSL https://raw.githubusercontent.com/Yamada-anna1/paseo-linux-guide/main
 
 ---
 
-[返回首页](../../README.md) · [本分类目录](README.md) · [上一篇：复制命令与使用约定](../01-introduction/copy-rules.md) · [下一篇：Linux 基础依赖](linux-prerequisites.md)
+[返回首页](../../README.md) · [本分类目录](README.md) · [上一篇：复制命令与使用约定](../01-introduction/copy-rules.md) · [下一篇：GitHub CLI 安装与登录](github-cli.md)

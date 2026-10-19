@@ -11,6 +11,10 @@
 | 项目 / 主题 | 地址 |
 | --- | --- |
 | Codex CLI 官方文档 | https://learn.chatgpt.com/docs/codex/cli |
+| GitHub CLI Linux 安装 | https://github.com/cli/cli/blob/trunk/docs/install_linux.md |
+| GitHub CLI 固定发布与校验文件 | https://github.com/cli/cli/releases/tag/v2.102.0 |
+| GitHub CLI 浏览器登录 | https://cli.github.com/manual/gh_auth_login |
+| GitHub CLI 登录检查 | https://cli.github.com/manual/gh_auth_status |
 | Codex 认证文档 | https://developers.openai.com/codex/auth/ |
 | Codex 安装脚本 | https://chatgpt.com/codex/install.sh |
 | CC-Switch CLI 项目 | https://github.com/SaladDay/cc-switch-cli |

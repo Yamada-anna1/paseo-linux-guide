@@ -4,7 +4,7 @@ const vm = require('node:vm');
 const root = path.resolve(__dirname, '..');
 const categories = [
   {name:'简介',dir:'01-introduction',description:'工具关系、首次搭建路线、复制约定'},
-  {name:'安装部署',dir:'02-installation',description:'交互式一键安装、Linux 依赖、PATH、三个工具的手动安装'},
+  {name:'安装部署',dir:'02-installation',description:'交互式一键安装、GitHub CLI 登录、Linux 依赖、PATH、工具安装'},
   {name:'远程连接',dir:'03-remote',description:'Windows 密钥、SSH Agent、公钥认证、Paseo SSH'},
   {name:'项目与手机',dir:'04-projects-mobile',description:'Linux 路径、添加项目、二维码与 Relay'},
   {name:'模型与服务商',dir:'05-models',description:'服务商切换、模型缺少、手动添加、模型配置'},
@@ -13,7 +13,7 @@ const categories = [
 function read(name) { return fs.readFileSync(path.join(root,name),'utf8'); }
 function buildFiles() {
   const pages = JSON.parse(read('src/guide-content.json'));
-  if (pages.length !== 27) throw new Error('Expected 27 articles');
+  if (pages.length !== 28) throw new Error('Expected 28 articles');
   const ids = new Set();
   const location = new Map();
   for (const p of pages) {

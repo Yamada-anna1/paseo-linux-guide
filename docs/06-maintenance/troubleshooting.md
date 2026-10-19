@@ -9,6 +9,7 @@
 | 现象 / 报错 | 优先检查 | 对应文章 |
 | --- | --- | --- |
 | cc-switch / codex / paseo: command not found | 安装位置和当前用户 PATH | 命令目录与 PATH |
+| GitHub CLI (gh) is not installed or not in PATH | 同一 Linux 用户下选 10 安装、11 登录、12 检查；旧 daemon 按需选 13 刷新 | GitHub CLI 安装与登录 |
 | Set-Service 拒绝访问 | PowerShell 是否有管理员权限 | 启动 Windows SSH Agent |
 | Error connecting to agent | ssh-agent 是否运行、ssh-add 所属环境 | 启动 Windows SSH Agent |
 | Identity added 后仍 Permission denied | 远端是否开启公钥、密钥是否匹配、权限和 Match 规则 | 开启 Linux 公钥认证 |

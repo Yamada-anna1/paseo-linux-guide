@@ -2,10 +2,12 @@
 # Interactive Linux installer. Read menu input from a terminal, never from a curl pipe.
 # Upstream scripts are downloaded completely before execution; no keys are collected.
 
-GUIDE_INSTALLER_VERSION='1.1.0'
+GUIDE_INSTALLER_VERSION='1.2.0'
 GUIDE_CODEX_URL='https://chatgpt.com/codex/install.sh'
 GUIDE_CC_URL='https://github.com/SaladDay/cc-switch-cli/releases/latest/download/install.sh'
 GUIDE_NVM_URL='https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.8/install.sh'
+# Pinned official release; hashes checked against cli/cli release assets on 2026-10-20.
+GUIDE_GH_VERSION='2.102.0'
 GUIDE_TMP_DIR=''
 
 guide_info() { printf '\n[信息] %s\n' "$*"; }
@@ -98,7 +100,7 @@ guide_as_admin() {
 guide_ensure_base() {
   local guide_command
   local -a guide_missing=()
-  for guide_command in curl tar gzip xz git sha256sum; do
+  for guide_command in curl tar gzip xz git sha256sum install; do
     guide_has "$guide_command" || guide_missing+=("$guide_command")
   done
   if ((${#guide_missing[@]} == 0)); then return 0; fi
@@ -114,7 +116,7 @@ guide_ensure_base() {
     guide_error '无法自动补齐依赖：当前只处理 apt-get / dnf / yum。请先由管理员安装缺失命令。'
     return 1
   fi
-  for guide_command in curl tar gzip xz git sha256sum; do
+  for guide_command in curl tar gzip xz git sha256sum install; do
     if ! guide_has "$guide_command"; then
       guide_error "依赖安装后仍找不到 $guide_command，停止当前流程。"
       return 1
@@ -224,11 +226,58 @@ guide_install_paseo() {
   guide_ok "$(paseo --version)"
 }
 
+guide_gh_asset() {
+  case "$(uname -m)" in
+    x86_64)
+      GUIDE_GH_ARCH='amd64'
+      GUIDE_GH_SHA256='bb766f710eef8ede859c18578c72c327597cd4c8a85b06001b1f3843c6019386' ;;
+    aarch64|arm64)
+      GUIDE_GH_ARCH='arm64'
+      GUIDE_GH_SHA256='7862c86c72f43df3a2d93ddde6f473285b4e2af61b494849846827e513ef6484' ;;
+    *) guide_error 'GitHub CLI 自动安装仅支持 x86_64 / ARM64。'; return 1 ;;
+  esac
+}
+
+guide_verify_sha256() {
+  local guide_file="$1" guide_expected="$2"
+  [[ "$guide_expected" =~ ^[a-f0-9]{64}$ ]] || return 1
+  # Basename + controlled working directory also handles spaces in temporary paths.
+  (cd "$(dirname "$guide_file")" && printf '%s  %s\n' "$guide_expected" "$(basename "$guide_file")" | sha256sum --check --status)
+}
+
+guide_install_gh() {
+  if guide_working gh; then guide_ok "$(gh --version) 已可用，跳过安装。"; return 0; fi
+  if [[ -e "$HOME/.local/bin/gh" || -L "$HOME/.local/bin/gh" ]]; then
+    guide_confirm '发现无法正常运行的 GitHub CLI 文件，是否重新安装修复？' || return 1
+  fi
+  guide_gh_asset || return 1
+  guide_info "安装 GitHub CLI $GUIDE_GH_VERSION（官方二进制 + 固定 SHA-256 校验）。"
+  guide_ensure_base || return 1
+  local guide_package="gh_${GUIDE_GH_VERSION}_linux_${GUIDE_GH_ARCH}"
+  local guide_archive="$GUIDE_TMP_DIR/$guide_package.tar.gz" guide_extract
+  guide_download "https://github.com/cli/cli/releases/download/v$GUIDE_GH_VERSION/$guide_package.tar.gz" "$guide_archive" || return 1
+  if ! guide_verify_sha256 "$guide_archive" "$GUIDE_GH_SHA256"; then
+    guide_error 'GitHub CLI 校验失败；没有解压、运行或安装该下载文件。'; return 1
+  fi
+  guide_extract="$(mktemp -d "$GUIDE_TMP_DIR/gh-extract.XXXXXXXX")" || return 1
+  tar -xzf "$guide_archive" -C "$guide_extract" "$guide_package/bin/gh" || return 1
+  if ! "$guide_extract/$guide_package/bin/gh" --version; then
+    guide_error '下载的 GitHub CLI 无法运行，未替换已有文件。'; return 1
+  fi
+  guide_save_environment || return 1
+  install -m 0755 "$guide_extract/$guide_package/bin/gh" "$HOME/.local/bin/gh" || return 1
+  guide_prepend_path
+  if ! guide_working gh; then guide_error 'GitHub CLI 安装后验证失败。'; return 1; fi
+  guide_ok "$(gh --version)"
+  guide_info '下一步选 11 登录、12 检查；Paseo 仍提示找不到 gh 时，任务结束后再选 13。'
+}
+
 guide_install_all() {
   guide_install_codex || return 1
   guide_install_cc || return 1
   guide_install_paseo || return 1
-  guide_ok '三个工具均已安装并通过版本检查。登录、服务启动和配对请继续选择菜单。'
+  guide_install_gh || return 1
+  guide_ok 'Codex、CC-Switch、Paseo、GitHub CLI 均已安装并通过版本检查。登录、启动和配对请继续选择菜单。'
 }
 
 guide_start_paseo() {
@@ -247,7 +296,7 @@ guide_pair_paseo() {
 guide_status() {
   local guide_tool
   guide_info '仅检查当前用户的命令版本和路径，不安装软件。'
-  for guide_tool in node npm codex cc-switch paseo; do
+  for guide_tool in node npm git codex cc-switch paseo gh; do
     if guide_working "$guide_tool"; then
       printf '\n%s：%s\n' "$guide_tool" "$(command -v "$guide_tool")"
       "$guide_tool" --version
@@ -274,12 +323,65 @@ guide_configure_cc() {
   cc-switch <&9
 }
 
+guide_github_status() {
+  guide_info '检查当前 Linux 用户的 GitHub CLI 和 github.com 登录状态；不会安装或登录。'
+  if ! guide_working gh; then guide_error 'gh 不可用，请先选择菜单 10。'; return 1; fi
+  printf 'gh 路径：%s\n' "$(command -v gh)"
+  gh --version || return 1
+  if [[ -n "${GH_TOKEN:-}" || -n "${GITHUB_TOKEN:-}" ]]; then
+    guide_info '检测到 GH_TOKEN / GITHUB_TOKEN；gh 会优先使用环境凭据，不代表 daemon 也继承了它。不会显示变量内容。'
+  fi
+  if ! gh auth status --hostname github.com <&9; then
+    guide_error 'GitHub 登录未通过检查：可能未登录、凭据失效或网络失败。核对上方错误；需要登录时选 11。'
+    return 1
+  fi
+}
+
+guide_login_github() {
+  if [[ -n "${GH_TOKEN:-}" || -n "${GITHUB_TOKEN:-}" ]]; then
+    guide_error '检测到 GH_TOKEN / GITHUB_TOKEN，未开始持久化登录。可选 12 检查；若改用浏览器登录，请自行在原终端移除临时凭据后重开菜单。'
+    return 1
+  fi
+  guide_info '请使用运行 Paseo 的同一个 Linux 用户登录 GitHub；Windows 上的登录不会自动传到服务器。'
+  guide_info '将使用 github.com 浏览器设备码授权及 HTTPS Git 协议；按提示在自己的电脑/手机完成授权，不要分享设备码。'
+  guide_info '没有可用的系统凭据库时，gh 可能把凭据保存为本用户配置目录中的明文文件。不要上传该目录。'
+  guide_confirm '是否继续安装（如缺少）并登录 GitHub？' || return 0
+  guide_install_gh || return 1
+  if gh auth status --hostname github.com >/dev/null 2>&1; then
+    guide_ok '当前用户已有可用 GitHub 登录，保留现有账号与 Git 协议配置。'
+    guide_github_status
+    return $?
+  fi
+  gh auth login --hostname github.com --git-protocol https --web <&9 || return 1
+  guide_github_status
+}
+
+guide_refresh_paseo_environment() {
+  if [[ -n "${PASEO_HOST:-}" ]]; then
+    guide_error '检测到 PASEO_HOST；为避免误操作其他主机，未停止服务。请在目标 Linux 取消远程选择后重开菜单。'
+    return 1
+  fi
+  local guide_paseo_home="${PASEO_HOME:-$HOME/.paseo}"
+  if [[ "$guide_paseo_home" != /* || "$guide_paseo_home" == / ]]; then
+    guide_error 'PASEO_HOME 必须是有效的 Linux 绝对目录，未停止服务。'; return 1
+  fi
+  guide_info "将停止并从当前 PATH 重新启动本机 Paseo：$guide_paseo_home。可能中断任务和客户端连接。"
+  guide_info '请先等任务结束。如果由 systemd / 容器管理，请取消并检查其启动环境；本操作不修改服务定义。'
+  guide_confirm '确认当前目标无运行中任务，并执行停止后启动？' || return 0
+  guide_load_nvm || return 1
+  if ! guide_working paseo; then guide_error 'Paseo 不可用，请先选 4 安装。'; return 1; fi
+  paseo daemon stop --home "$guide_paseo_home" <&9 || return 1
+  paseo daemon start --home "$guide_paseo_home" <&9 || return 1
+  paseo daemon status --home "$guide_paseo_home" <&9 || return 1
+  guide_info '请回到 Paseo 重新打开 Clone from GitHub。若仍报错，确认连接主机、Linux 用户和服务管理器环境。'
+}
+
 guide_menu() {
   local guide_result
   while true; do
     printf '\n%s\n' '========== Linux 工具安装菜单 =========='
     printf '%s\n' \
-      '  1) 一键安装全部：Codex + CC-Switch + Paseo（自动补依赖）' \
+      '  1) 一键安装全部：Codex + CC-Switch + Paseo + GitHub CLI（自动补依赖）' \
       '  2) 只安装 Codex' \
       '  3) 只安装 CC-Switch' \
       '  4) 只安装 Paseo（自动补 Node.js / npm）' \
@@ -288,6 +390,10 @@ guide_menu() {
       '  7) 检查版本、命令路径和服务状态（只读）' \
       '  8) Codex 官方账号登录' \
       '  9) 打开 CC-Switch 服务商配置' \
+      ' 10) 安装 GitHub CLI（gh，供 GitHub 克隆使用）' \
+      ' 11) 登录 GitHub（浏览器设备码授权）' \
+      ' 12) 检查 GitHub CLI 和登录状态（只读）' \
+      ' 13) 刷新 Paseo 环境（停止后启动，需确认）' \
       '  0) 退出'
     guide_read '输入选项编号并回车：' || break
     guide_result=0
@@ -301,6 +407,10 @@ guide_menu() {
       7) guide_status || guide_result=$? ;;
       8) guide_login_codex || guide_result=$? ;;
       9) guide_configure_cc || guide_result=$? ;;
+      10) guide_install_gh || guide_result=$? ;;
+      11) guide_login_github || guide_result=$? ;;
+      12) guide_github_status || guide_result=$? ;;
+      13) guide_refresh_paseo_environment || guide_result=$? ;;
       0|q|Q) break ;;
       *) printf '选项无效，请输入菜单中的编号。\n'; continue ;;
     esac

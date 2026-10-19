@@ -55,4 +55,4 @@ Paseo 的 npm 安装方式依赖 Node.js 和 npm；curl 用于下载安装脚本
 
 ---
 
-[返回首页](../../README.md) · [本分类目录](README.md) · [上一篇：交互式菜单安装](interactive-installer.md) · [下一篇：命令目录与 PATH](path.md)
+[返回首页](../../README.md) · [本分类目录](README.md) · [上一篇：GitHub CLI 安装与登录](github-cli.md) · [下一篇：命令目录与 PATH](path.md)

@@ -1,8 +1,8 @@
 # Linux · Codex · CC-Switch · Paseo 分类手册
 
-一条命令打开中文安装菜单，按数字安装 Codex、CC-Switch、Paseo，并自动补齐依赖。另附 SSH 连接、手机配对与模型排障分类手册。
+一条命令打开中文安装菜单，按数字安装 Codex、CC-Switch、Paseo、GitHub CLI（gh），并自动补齐依赖。另附 SSH 连接、GitHub 克隆、手机配对与模型排障分类手册。
 
-这是第三方整理的**交互式安装器与使用文档仓库**，不是三个工具的官方发行包。克隆仓库不会安装软件；主动运行下方命令并选择安装选项后，才会调用上游安装器。
+这是第三方整理的**交互式安装器与使用文档仓库**，不是上述工具的官方发行包。克隆仓库不会安装软件；主动运行下方命令并选择安装选项后，才会下载安装所选上游工具。
 
 ## 一条命令，按菜单安装
 
@@ -12,10 +12,10 @@
 curl -fsSL https://raw.githubusercontent.com/Yamada-anna1/paseo-linux-guide/main/install.sh | bash
 ```
 
-运行远程脚本前请确认信任来源；可以先审阅 [install.sh](install.sh)。脚本会从 OpenAI、CC-Switch 项目、nvm 项目和 npm 下载所选软件。缺少系统依赖时会用 apt-get / dnf / yum 补装；普通用户需要具备相应 sudo 权限。
+运行远程脚本前请确认信任来源；可以先审阅 [install.sh](install.sh)。脚本会从 OpenAI、CC-Switch 项目、nvm 项目、npm 和 GitHub CLI 官方发布页下载所选软件。缺少系统依赖时会用 apt-get / dnf / yum 补装；普通用户需要具备相应 sudo 权限。
 
 ```text
-1) 一键安装全部：Codex + CC-Switch + Paseo（自动补依赖）
+1) 一键安装全部：Codex + CC-Switch + Paseo + GitHub CLI（自动补依赖）
 2) 只安装 Codex
 3) 只安装 CC-Switch
 4) 只安装 Paseo（自动补 Node.js / npm）
@@ -24,16 +24,24 @@ curl -fsSL https://raw.githubusercontent.com/Yamada-anna1/paseo-linux-guide/main
 7) 检查版本、命令路径和服务状态（只读）
 8) Codex 官方账号登录
 9) 打开 CC-Switch 服务商配置
+10) 安装 GitHub CLI（gh，供 GitHub 克隆使用）
+11) 登录 GitHub（浏览器设备码授权）
+12) 检查 GitHub CLI 和登录状态（只读）
+13) 刷新 Paseo 环境（停止后启动，需确认）
 0) 退出
 ```
 
 **你已经装好 Codex 和 CC-Switch，却遇到 `npm: command not found`：选 `4` 即可。** 完成后选 `5` 启动，需手机连接时选 `6`。从零搭建可以选 `1`；可正常运行的已有工具会跳过，不会自动升级或覆盖。
 
+**Paseo 的 Clone from GitHub 提示 `GitHub CLI (gh) is not installed or not in PATH`：依次选 `10 → 11 → 12`。** 11 按提示在自己的电脑或手机浏览器授权；12 确认服务器上的登录。仍报找不到 `gh` 时，等任务结束后选 `13` 并确认，再回到 Paseo 重开克隆窗口。请使用运行 Paseo 的同一个 Linux 用户；不必重装全部工具。
+
 - 缺少或无法运行的 Node.js/npm，或 Node.js 低于 22：通过 nvm 安装 Node.js 24 LTS，并保存 Bash 环境。
+- GitHub CLI 安装固定版本 `2.102.0` 官方 Linux 二进制，并核对固定 SHA-256；安装到 `~/.local/bin/gh`，不新增系统软件源。已有可用版本直接保留。
 - 任一步骤失败会停止当前流程、显示报错并返回菜单，不会继续调用没有安装好的工具。
 - 安装器的菜单直接从终端读取输入，支持上面的 `curl … | bash` 方式。
 - 不自动登录账号，不修改 SSH、防火墙、API Key，不自动停止已有 daemon。
-- 登录和 Relay 启用会再确认；二维码与配对链接不可公开。
+- 登录、Relay 启用及 Paseo 环境刷新会再确认；设备码、二维码与配对链接不可公开。
+- GitHub 授权由你本人完成；无系统凭据库时 gh 可能以明文保存凭据。检测到 `GH_TOKEN` / `GITHUB_TOKEN` 时不自动覆盖或转为持久化登录。
 - 菜单内可立即继续启动或配对。退出后，**重新连接一次 SSH**，让原终端加载新 PATH / Node.js 环境。
 
 详细说明：[交互式菜单安装](docs/02-installation/interactive-installer.md)。
@@ -46,6 +54,7 @@ curl -fsSL https://raw.githubusercontent.com/Yamada-anna1/paseo-linux-guide/main
 - **模型缺少 / 刷新不出来**：[四条诊断命令](docs/05-models/models-missing.md)
 - **Windows 远程连接**：[SSH 密钥](docs/03-remote/ssh-key.md) → [SSH Agent](docs/03-remote/ssh-agent.md) → [连接测试](docs/03-remote/ssh-test.md) → [Paseo 连接](docs/03-remote/desktop-ssh.md)
 - **手机连接**：[二维码与 Relay](docs/04-projects-mobile/mobile-pair.md)
+- **GitHub 克隆报错 / 登录**：[GitHub CLI 安装与登录](docs/02-installation/github-cli.md)
 - **喜欢左侧目录的版式**：[下载单文件 HTML 手册](https://github.com/Yamada-anna1/paseo-linux-guide/raw/refs/heads/main/index.html)，用浏览器打开。
 
 HTML 已内嵌内容、样式和脚本，不依赖服务器或 CDN。GitHub 的文件页面只显示源码，下载后用 Edge / Chrome 打开；不要改成 `.txt`。
@@ -57,6 +66,7 @@ HTML 已内嵌内容、样式和脚本，不依赖服务器或 CDN。GitHub 的�
 | Codex CLI（`codex`） | 实际执行 AI 编程任务 | Linux 服务器 |
 | CC-Switch CLI（`cc-switch`） | 管理、切换服务商配置；可选 | 与 Codex 相同的 Linux 用户 |
 | Paseo CLI（`paseo`） | 管理 daemon、Agent 和远程连接 | 与 Codex 相同的 Linux 用户 |
+| GitHub CLI（`gh`） | GitHub 登录、仓库列表与克隆入口；不同于 `git` | 与 Paseo 相同的 Linux 用户 |
 | Paseo 桌面 / 手机客户端 | 连接并操作 Linux 上的服务 | 本地电脑 / 手机，按 [Paseo 官网](https://paseo.sh) 下载 |
 
 ## 手动安装命令（备选，不需要与菜单方式重复执行）
@@ -158,7 +168,7 @@ paseo daemon pair
 | 分类 | 篇数 | 内容 |
 | --- | --- | --- |
 | [简介](docs/01-introduction/README.md) | 3 | 工具关系、首次搭建路线、复制约定 |
-| [安装部署](docs/02-installation/README.md) | 7 | 交互式一键安装、Linux 依赖、PATH、三个工具的手动安装 |
+| [安装部署](docs/02-installation/README.md) | 8 | 交互式一键安装、GitHub CLI 登录、Linux 依赖、PATH、工具安装 |
 | [远程连接](docs/03-remote/README.md) | 5 | Windows 密钥、SSH Agent、公钥认证、Paseo SSH |
 | [项目与手机](docs/04-projects-mobile/README.md) | 3 | Linux 路径、添加项目、二维码与 Relay |
 | [模型与服务商](docs/05-models/README.md) | 4 | 服务商切换、模型缺少、手动添加、模型配置 |
@@ -172,6 +182,7 @@ paseo daemon pair
 | `PubkeyAuthentication no` | [开启公钥认证](docs/03-remote/sshd-pubkey.md) |
 | 不知道填写哪个 Linux 路径 | [项目路径怎么看](docs/04-projects-mobile/project-paths.md) |
 | `Choose a project` | [添加 Linux 项目](docs/04-projects-mobile/project-add.md) |
+| `GitHub CLI (gh) is not installed or not in PATH` | [GitHub CLI 安装与登录](docs/02-installation/github-cli.md) |
 | 切换接口后 Paseo 没变化 | [服务商配置](docs/05-models/provider-switch.md) |
 | 模型少、刷新无效 | [模型排障](docs/05-models/models-missing.md) |
 | 修改 PATH 后 daemon 仍找不到 Codex | [启停与环境刷新](docs/06-maintenance/daemon-control.md) |
@@ -206,7 +217,7 @@ paseo-linux-guide/
 ├── README.md                 # 首页、分类入口、安装命令
 ├── index.html                # 带侧栏、搜索和复制按钮的离线手册
 ├── install.sh                # 中文交互式安装菜单
-├── docs/                     # 6 大分类、27 篇 Markdown 教程
+├── docs/                     # 6 大分类、28 篇 Markdown 教程
 ├── src/guide-content.json    # 教程内容唯一来源（仅脱敏内容）
 ├── src/guide-shell.html      # HTML 外壳
 ├── src/readme-template.md    # 首页模板

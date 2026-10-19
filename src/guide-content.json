@@ -224,11 +224,13 @@
       {"type":"p","text":"在已登录 Linux 服务器的 Bash 终端执行。需要已经有 curl 和 Bash。菜单从终端读取按键，不会把脚本下载内容当成输入。"},
       {"type":"code","lang":"bash","label":"Linux · 打开中文安装菜单","text":"curl -fsSL https://raw.githubusercontent.com/Yamada-anna1/paseo-linux-guide/main/install.sh | bash"},
       {"type":"h2","text":"按数字选择"},
-      {"type":"table","headers":["选项","功能"],"rows":[["1","安装 Codex、CC-Switch、Paseo，自动补齐依赖"],["2","只安装 Codex"],["3","只安装 CC-Switch"],["4","只安装 Paseo，自动补 Node.js/npm"],["5","启动 Paseo 并查看状态"],["6","确认后启用 Relay 并显示手机配对二维码"],["7","只读检查版本、路径和服务状态"],["8","确认后进行 Codex 官方账号设备码登录"],["9","打开 CC-Switch 服务商配置界面"],["0","退出菜单"]]},
+      {"type":"table","headers":["选项","功能"],"rows":[["1","安装 Codex、CC-Switch、Paseo、GitHub CLI，自动补齐依赖"],["2","只安装 Codex"],["3","只安装 CC-Switch"],["4","只安装 Paseo，自动补 Node.js/npm"],["5","启动 Paseo 并查看状态"],["6","确认后启用 Relay 并显示手机配对二维码"],["7","只读检查版本、路径和服务状态"],["8","确认后进行 Codex 官方账号设备码登录"],["9","打开 CC-Switch 服务商配置界面"],["10","安装 GitHub CLI（gh）"],["11","确认后使用浏览器设备码登录 GitHub"],["12","只读检查 GitHub CLI 和登录状态"],["13","确认后停止再启动本机 Paseo，以刷新环境"],["0","退出菜单"]]},
       {"type":"h2","text":"已经安装 Codex 和 CC-Switch，但缺少 npm"},
       {"type":"p","text":"选 4 即可。安装器会先处理不可用的 Node.js/npm，再安装 Paseo。完成后选 5 启动；需要手机连接再选 6。从零安装则选 1。可正常运行的已有工具会自动跳过，不需要重装。"},
+      {"type":"h2","text":"GitHub 克隆窗口提示找不到 gh"},
+      {"type":"p","text":"在运行 Paseo 的同一台 Linux、同一个用户下打开菜单，依次选 10 安装、11 浏览器授权、12 检查。仍报找不到 gh 时，先等正在执行的任务结束，再选 13 并确认；回到 Paseo 重开 Clone from GitHub。13 不会自动执行，也不处理 systemd / 容器的服务定义。"},
       {"type":"h2","text":"安装器会做什么"},
-      {"type":"list","items":["支持 Linux x86_64 与 ARM64；基础包自动安装处理 apt-get、dnf、yum。其他发行版的缺失依赖会提示，不强行安装。","Node.js/npm 不可用或 Node.js 低于 22 时，通过 nvm 安装 Node.js 24 LTS；Alpine 的 musl Node.js 不纳入自动流程。","Codex 调用 OpenAI 官方安装器；CC-Switch 调用 SaladDay 项目安装器；Paseo 通过 npm 安装到当前用户的 ~/.local。","在 Bash 配置末尾追加带标记的环境设置，避免重复追加，不覆盖原配置。","任一步骤失败就停止当前流程并返回菜单，不继续启动不存在的命令。","不会自动升级可用工具、修改 SSH 或防火墙，不自动登录账号，也不自动停止已有 daemon。"]},
+      {"type":"list","items":["支持 Linux x86_64 与 ARM64；基础包自动安装处理 apt-get、dnf、yum。其他发行版的缺失依赖会提示，不强行安装。","Node.js/npm 不可用或 Node.js 低于 22 时，通过 nvm 安装 Node.js 24 LTS；Alpine 的 musl Node.js 不纳入自动流程。","Codex 调用 OpenAI 官方安装器；CC-Switch 调用 SaladDay 项目安装器；Paseo 通过 npm 安装到当前用户的 ~/.local。","GitHub CLI 使用固定版本 2.102.0 官方二进制，校验固定 SHA-256 后安装到 ~/.local/bin/gh；不新增软件源，保留已有可用 gh。","在 Bash 配置末尾追加带标记的环境设置，避免重复追加，不覆盖原配置。","任一步骤失败就停止当前流程并返回菜单，不继续启动不存在的命令。","不会自动升级可用工具、修改 SSH 或防火墙，不自动登录账号，也不自动停止已有 daemon。"]},
       {"type":"note","title":"运行前确认来源","text":"此脚本会下载并运行对应上游软件；选择安装后，必要时会补装系统依赖。普通用户需要有相应 sudo 权限。建议使用已有专用 Linux 用户，不要交替用 root 与普通用户混装。源码：https://github.com/Yamada-anna1/paseo-linux-guide/blob/main/install.sh"},
       {"type":"h2","text":"安装后怎样使用"},
       {"type":"p","text":"在菜单里可以立即继续启动、登录或生成二维码。退出安装器后，重新连接一次 SSH，使原终端加载新 PATH 和 Node.js 环境。子进程无法直接改写它所属的旧终端环境。"},
@@ -236,6 +238,31 @@
       {"type":"h2","text":"测试与问题反馈"},
       {"type":"p","text":"脚本包含离线模拟测试，以及 GitHub 托管 Ubuntu 临时环境的真实安装测试。测试不连接个人服务器，不登录账号、不请求模型，也不生成配对二维码。运行结果：https://github.com/Yamada-anna1/paseo-linux-guide/actions"},
       {"type":"p","text":"如果失败，保留菜单选项编号和错误文字，先遮盖凭据再反馈。网络、上游下载源或系统兼容性仍可能导致失败；不要在失败后重复执行手动启动命令。"}
+    ]
+  },
+  {
+    "id": "github-cli",
+    "title": "GitHub CLI 安装与登录",
+    "group": "安装部署",
+    "description": "解决 Paseo 克隆窗口缺少 gh，并区分服务器授权与 daemon 环境。",
+    "platform": "Linux · 与 Paseo 相同的用户",
+    "blocks": [
+      {"type":"h2","text":"先分清 git 与 gh"},
+      {"type":"p","text":"git 用于版本管理和普通仓库克隆；gh 是 GitHub CLI，负责 GitHub 账号认证和仓库相关操作。装了 git 并不等于装了 gh。Paseo 的 Clone from GitHub 报 GitHub CLI (gh) is not installed or not in PATH 时，先处理当前远端主机的 gh，不是重装 Codex 或 SSH。"},
+      {"type":"h2","text":"一条命令打开菜单"},
+      {"type":"code","lang":"bash","label":"Linux · 原安装入口保持不变","text":"curl -fsSL https://raw.githubusercontent.com/Yamada-anna1/paseo-linux-guide/main/install.sh | bash"},
+      {"type":"table","headers":["顺序 / 选项","操作","完成标志"],"rows":[["1 · 10","安装 GitHub CLI；已有可用版本则保留","显示 gh 版本，安装成功"],["2 · 11","确认登录；按终端提示在自己的电脑或手机浏览器授权","返回安装菜单且没有登录错误"],["3 · 12","检查当前 Linux 用户的 GitHub 登录","状态显示正确账号已登录"],["按需 · 13","旧 Paseo 仍找不到 gh 时，任务结束后确认停止再启动","服务状态正常，重开克隆窗口验证"]]},
+      {"type":"p","text":"全新搭建也可直接选 1，安装全部四个工具；仍需自行选 11 登录。只缺 gh 不必重装全部。菜单 10 使用经 SHA-256 校验的官方 2.102.0 Linux x86_64 / ARM64 二进制；不是自动跟随最新版的升级器。"},
+      {"type":"h2","text":"浏览器授权怎么做"},
+      {"type":"list","items":["确保 SSH 登录用户就是运行 Paseo daemon 的用户；Windows 上已有的 GitHub 登录不会自动同步到 Linux。","选择 11 并确认后，按照终端显示的授权网址和一次性设备码，在自己的电脑或手机浏览器完成登录与权限确认。服务器无需安装桌面浏览器。","若询问是否让 Git 使用 GitHub 凭据，可按自身需要确认。此次新登录使用 github.com 与 HTTPS；已有有效登录直接保留，不切换账号。","等待终端完成授权，再选 12。不要把设备码、令牌或凭据配置内容发到聊天、截图或公开仓库。"]},
+      {"type":"note","title":"凭据保存与环境变量","text":"gh 优先使用可用的系统凭据库；没有可用凭据库时可能退回明文配置文件。安装器会事先提示，不强制使用不安全存储。检测到 GH_TOKEN / GITHUB_TOKEN 时，菜单 11 不覆盖它们；菜单 12 的成功也不代表旧 daemon 继承了同一环境。若需要改用持久化浏览器登录，请自行移除原终端中的临时变量再重开菜单，不要输出变量内容。"},
+      {"type":"h2","text":"已安装但 Paseo 仍提示找不到"},
+      {"type":"list","items":["确认 Paseo 当前选中的是刚安装 gh 的那台 Linux 主机，且 daemon 与安装使用同一个用户。","选 7 或 12 确认当前终端能找到 gh；选 12 同时核对登录账号。","旧 daemon 不会自动继承新 PATH。等待任务结束，选 13 并确认停止后启动，再回到客户端重开克隆窗口。普通 daemon restart 不能保证刷新 supervisor 的环境。","若使用 systemd、容器或专门的 PASEO_HOME，检查真正的启动用户、PATH 和凭据环境；菜单 13 会明确显示目标目录，检测到 PASEO_HOST 会拒绝操作，不修改服务定义。","登录成功但私有仓库仍不出现：核对该账号的仓库权限、组织授权，以及终端与 daemon 是否使用相同配置目录。"]},
+      {"type":"h2","text":"只读手动检查（备选）"},
+      {"type":"code","lang":"bash","label":"Linux · gh 路径","text":"command -v gh"},
+      {"type":"code","lang":"bash","label":"Linux · gh 版本","text":"gh --version"},
+      {"type":"code","lang":"bash","label":"Linux · 检查 GitHub 登录，不显示令牌","text":"gh auth status --hostname github.com"},
+      {"type":"p","text":"官方资料：https://github.com/cli/cli/blob/trunk/docs/install_linux.md · https://cli.github.com/manual/gh_auth_login · https://cli.github.com/manual/gh_auth_status"}
     ]
   },
   {
@@ -1160,6 +1187,7 @@
     "description": "新建目录或克隆仓库，并处理 Choose a project 提示。",
     "platform": "Linux + Paseo 界面",
     "blocks": [
+      {"type":"note","title":"Paseo 内置 GitHub 克隆入口","text":"Clone from GitHub 提示缺少 gh 时，打开安装菜单，依次选 10 安装、11 登录、12 检查。旧 daemon 仍找不到命令，再等任务结束后选 13。详情见“GitHub CLI 安装与登录”。下方普通 git clone 是另一种方式，不需要重复执行。"},
       {
         "type": "h2",
         "text": "方式 A：新建空项目目录"
@@ -1726,6 +1754,7 @@
     "description": "区分普通重启和为新 PATH、配置环境启动新进程。",
     "platform": "Linux",
     "blocks": [
+      {"type":"note","title":"菜单方式刷新环境","text":"安装 gh 或改变 PATH 后，旧 daemon 可能仍使用旧环境。可在同一 Linux 用户的安装菜单选 13，核对目标目录、等待任务结束，再确认停止后启动。它会打断连接；不自动执行，也不修改 systemd / 容器服务配置。"},
       {
         "type": "h2",
         "text": "查看、启动、停止"
@@ -1913,6 +1942,11 @@
             "命令目录与 PATH"
           ],
           [
+            "GitHub CLI (gh) is not installed or not in PATH",
+            "同一 Linux 用户下选 10 安装、11 登录、12 检查；旧 daemon 按需选 13 刷新",
+            "GitHub CLI 安装与登录"
+          ],
+          [
             "Set-Service 拒绝访问",
             "PowerShell 是否有管理员权限",
             "启动 Windows SSH Agent"
@@ -2020,6 +2054,10 @@
             "Codex CLI 官方文档",
             "https://learn.chatgpt.com/docs/codex/cli"
           ],
+          ["GitHub CLI Linux 安装", "https://github.com/cli/cli/blob/trunk/docs/install_linux.md"],
+          ["GitHub CLI 固定发布与校验文件", "https://github.com/cli/cli/releases/tag/v2.102.0"],
+          ["GitHub CLI 浏览器登录", "https://cli.github.com/manual/gh_auth_login"],
+          ["GitHub CLI 登录检查", "https://cli.github.com/manual/gh_auth_status"],
           [
             "Codex 认证文档",
             "https://developers.openai.com/codex/auth/"
