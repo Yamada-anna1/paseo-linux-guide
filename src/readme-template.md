@@ -1,13 +1,47 @@
 # Linux · Codex · CC-Switch · Paseo 分类手册
 
-中文安装、SSH 远程连接、手机二维码配对、服务商配置与模型排障手册。每个代码块独立复制，并标明操作位置。
+一条命令打开中文安装菜单，按数字安装 Codex、CC-Switch、Paseo，并自动补齐依赖。另附 SSH 连接、手机配对与模型排障分类手册。
 
-这是第三方整理的**使用文档仓库**，不是 Codex、CC-Switch 或 Paseo 的官方软件仓库；克隆本仓库不会安装这三个工具。
+这是第三方整理的**交互式安装器与使用文档仓库**，不是三个工具的官方发行包。克隆仓库不会安装软件；主动运行下方命令并选择安装选项后，才会调用上游安装器。
+
+## 一条命令，按菜单安装
+
+在 **Linux 服务器的交互式 SSH 终端**复制这一条即可（需要已有 `curl` 和 Bash）：
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/Yamada-anna1/paseo-linux-guide/main/install.sh | bash
+```
+
+运行远程脚本前请确认信任来源；可以先审阅 [install.sh](install.sh)。脚本会从 OpenAI、CC-Switch 项目、nvm 项目和 npm 下载所选软件。缺少系统依赖时会用 apt-get / dnf / yum 补装；普通用户需要具备相应 sudo 权限。
+
+```text
+1) 一键安装全部：Codex + CC-Switch + Paseo（自动补依赖）
+2) 只安装 Codex
+3) 只安装 CC-Switch
+4) 只安装 Paseo（自动补 Node.js / npm）
+5) 启动 Paseo 并查看状态
+6) 启用 Relay 并显示手机配对二维码
+7) 检查版本、命令路径和服务状态（只读）
+8) Codex 官方账号登录
+9) 打开 CC-Switch 服务商配置
+0) 退出
+```
+
+**你已经装好 Codex 和 CC-Switch，却遇到 `npm: command not found`：选 `4` 即可。** 完成后选 `5` 启动，需手机连接时选 `6`。从零搭建可以选 `1`；可正常运行的已有工具会跳过，不会自动升级或覆盖。
+
+- 缺少或无法运行的 Node.js/npm，或 Node.js 低于 22：通过 nvm 安装 Node.js 24 LTS，并保存 Bash 环境。
+- 任一步骤失败会停止当前流程、显示报错并返回菜单，不会继续调用没有安装好的工具。
+- 安装器的菜单直接从终端读取输入，支持上面的 `curl … | bash` 方式。
+- 不自动登录账号，不修改 SSH、防火墙、API Key，不自动停止已有 daemon。
+- 登录和 Relay 启用会再确认；二维码与配对链接不可公开。
+- 菜单内可立即继续启动或配对。退出后，**重新连接一次 SSH**，让原终端加载新 PATH / Node.js 环境。
+
+详细说明：[交互式菜单安装](docs/02-installation/interactive-installer.md)。
 
 ## 从哪里开始
 
 - **第一次配置**：[首次搭建路线](docs/01-introduction/quickstart.md)
-- **只想安装工具**：直接看下面的“三个工具安装命令”
+- **只想安装工具**：使用上方“一条命令，按菜单安装”；下方手动命令仅作备选
 - **已经配置好**：[日常命令速查](docs/06-maintenance/daily.md)
 - **模型缺少 / 刷新不出来**：[四条诊断命令](docs/05-models/models-missing.md)
 - **Windows 远程连接**：[SSH 密钥](docs/03-remote/ssh-key.md) → [SSH Agent](docs/03-remote/ssh-agent.md) → [连接测试](docs/03-remote/ssh-test.md) → [Paseo 连接](docs/03-remote/desktop-ssh.md)
@@ -25,13 +59,13 @@ HTML 已内嵌内容、样式和脚本，不依赖服务器或 CDN。GitHub 的�
 | Paseo CLI（`paseo`） | 管理 daemon、Agent 和远程连接 | 与 Codex 相同的 Linux 用户 |
 | Paseo 桌面 / 手机客户端 | 连接并操作 Linux 上的服务 | 本地电脑 / 手机，按 [Paseo 官网](https://paseo.sh) 下载 |
 
-## 三个工具安装命令
+## 手动安装命令（备选，不需要与菜单方式重复执行）
 
 以下在 **Linux 服务器的 Bash 终端**执行，不是在 Windows PowerShell 里执行。
 
 先确保 `curl`、Node.js 和 `npm` 可用。Paseo 的 npm 安装需要 Node.js/npm；Codex 的独立安装脚本不依赖 npm。详细依赖检查见 [Linux 基础依赖](docs/02-installation/linux-prerequisites.md)。若全局 npm 安装报权限问题，先确认 Node.js 的安装方式与用户，不要直接切换为 root 后混用两套配置。
 
-运行 `curl … | sh/bash` 会执行上游安装脚本。仅在信任对应来源时使用；需要审查时先下载阅读。这里只列出命令，本仓库不会自动安装软件或修改 SSH。
+运行 `curl … | sh/bash` 会执行上游安装脚本。仅在信任对应来源时使用；需要审查时先下载阅读。下方是手动方式，与上面的菜单安装器二选一，不必重复安装。
 
 ### 1. Codex CLI
 
@@ -156,7 +190,7 @@ git clone https://github.com/Yamada-anna1/paseo-linux-guide.git
 
 ## 文档维护
 
-本公开版整理于 **2026-10-20**。安装入口已按上游文档核对；没有在任何用户的 Linux 服务器上执行安装或声称完成配置。具体 CLI 选项、界面和模型权限以所用版本及账号为准。
+本公开版更新于 **2026-10-20**。安装入口与非交互安装参数已按上游文档及安装脚本核对。测试分为离线模拟测试和 GitHub 托管 Ubuntu 临时环境中的真实安装测试；结果见 [Actions](https://github.com/Yamada-anna1/paseo-linux-guide/actions)。没有连接或修改任何用户的服务器，测试不会登录账号、请求模型或生成配对二维码。
 
 目录结构：
 
@@ -164,11 +198,13 @@ git clone https://github.com/Yamada-anna1/paseo-linux-guide.git
 paseo-linux-guide/
 ├── README.md                 # 首页、分类入口、安装命令
 ├── index.html                # 带侧栏、搜索和复制按钮的离线手册
-├── docs/                     # 6 大分类、26 篇 Markdown 教程
+├── install.sh                # 中文交互式安装菜单
+├── docs/                     # 6 大分类、27 篇 Markdown 教程
 ├── src/guide-content.json    # 教程内容唯一来源（仅脱敏内容）
 ├── src/guide-shell.html      # HTML 外壳
 ├── src/readme-template.md    # 首页模板
-└── scripts/                  # 构建与检查，不执行工具安装
+├── scripts/                  # 文档构建、检查与安装器测试
+└── .github/workflows/        # Ubuntu 自动测试
 ```
 
 修改 `src/guide-content.json` / `src/readme-template.md` 后，分别执行（需要 Node.js，无第三方构建依赖）：
@@ -180,5 +216,13 @@ npm run build
 ```bash
 npm run check
 ```
+
+离线安装器测试（需要 Bash；不联网、不安装软件、不改动真实用户主目录）：
+
+```bash
+bash scripts/test-installer.sh
+```
+
+`scripts/smoke-installer-ci.sh` 仅允许在临时的 GitHub 托管 runner 中执行真实安装；请勿作为个人服务器的安装入口。
 
 检查包括文档数量、内部链接、生成内容一致性、脚本语法和常见凭据模式，不代替人工安全审查。具体资料见 [参考资料](docs/06-maintenance/references.md)。

@@ -29,4 +29,4 @@
 
 ---
 
-[返回首页](../../README.md) · [本分类目录](README.md) · [上一篇：首次搭建路线](quickstart.md) · [下一篇：Linux 基础依赖](../02-installation/linux-prerequisites.md)
+[返回首页](../../README.md) · [本分类目录](README.md) · [上一篇：首次搭建路线](quickstart.md) · [下一篇：交互式菜单安装](../02-installation/interactive-installer.md)

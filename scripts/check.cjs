@@ -30,7 +30,7 @@ function walk(dir) {
 const all=walk(root);
 for(const file of all) {
   const relative=path.relative(root,file);
-  if(!/\.(md|json|html|cjs)$|^\.(gitignore|gitattributes)$/.test(relative)) failures.push('Unexpected repository file: '+relative);
+  if(!/\.(md|json|html|cjs|sh|yml)$|^\.(gitignore|gitattributes)$/.test(relative)) failures.push('Unexpected repository file: '+relative);
   const text=fs.readFileSync(file,'utf8');
   const secretPatterns=[
     /-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----/,
