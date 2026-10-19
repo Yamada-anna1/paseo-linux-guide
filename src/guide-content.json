@@ -1,0 +1,2060 @@
+[
+  {
+    "id": "overview",
+    "title": "三个工具与整体关系",
+    "group": "简介",
+    "description": "先分清 Codex、Paseo 和 CC-Switch 各自负责什么。",
+    "platform": "阅读说明",
+    "blocks": [
+      {
+        "type": "p",
+        "text": "这份手册对应的使用方式是：在 Windows 上打开 Paseo Desktop，通过 SSH 连接 Linux 服务器上的 Paseo daemon，由 daemon 启动和管理服务器上的 Codex。代码、工作目录和实际执行的命令都位于 Linux 服务器。"
+      },
+      {
+        "type": "table",
+        "headers": [
+          "工具",
+          "执行命令",
+          "作用",
+          "是否需要"
+        ],
+        "rows": [
+          [
+            "Codex CLI",
+            "codex",
+            "阅读代码、修改文件、运行命令并执行 AI 编程任务",
+            "使用 Codex 时需要"
+          ],
+          [
+            "Paseo CLI / daemon",
+            "paseo",
+            "在服务器上管理 Agent、项目和客户端连接",
+            "远程 Paseo 需要"
+          ],
+          [
+            "CC-Switch CLI",
+            "cc-switch",
+            "管理和切换 Codex、Claude 等工具的服务商配置",
+            "可选"
+          ]
+        ]
+      },
+      {
+        "type": "h2",
+        "text": "它们怎样配合"
+      },
+      {
+        "type": "list",
+        "items": [
+          "Windows Paseo Desktop → SSH → Linux Paseo daemon → Linux Codex CLI。",
+          "手机 Paseo → 配对连接 / Relay → Linux Paseo daemon。",
+          "CC-Switch 修改 Codex 的服务商配置；它不是上述连接链条中必须常驻的中转进程。",
+          "安装 cc-switch 并不会同时安装 codex 或 paseo，三个命令要分别检查。"
+        ]
+      },
+      {
+        "type": "h2",
+        "text": "公开示例与占位符"
+      },
+      {
+        "type": "table",
+        "headers": [
+          "字段",
+          "示例值 / 说明"
+        ],
+        "rows": [
+          [
+            "服务器地址",
+            "YOUR_SERVER_IP：替换为你自己的 IP 或域名"
+          ],
+          [
+            "SSH 用户",
+            "root 仅作示例；优先使用已有的专用普通用户"
+          ],
+          [
+            "SSH 端口",
+            "示例为 22，以实际配置为准"
+          ],
+          [
+            "Linux 主机名",
+            "LINUX_HOSTNAME"
+          ],
+          [
+            "Windows 用户目录",
+            "C:\\Users\\WINDOWS_USER"
+          ],
+          [
+            "公开版整理日期",
+            "2026-10-20"
+          ]
+        ]
+      },
+      {
+        "type": "note",
+        "title": "安全与适用范围",
+        "text": "本仓库是第三方整理的中文使用手册，不是三个工具的官方发行包。未包含真实服务器地址、密码、私钥、API Key 或配对二维码。示例中的 root 和 /root 仅用于说明；改用普通用户时，请同步替换用户名和主目录。不要为了照抄示例而开启 root 密码登录或开放公网 daemon 端口。"
+      }
+    ]
+  },
+  {
+    "id": "quickstart",
+    "title": "首次搭建路线",
+    "group": "简介",
+    "description": "按依赖顺序完成首次配置，已经成功的环节可以跳过。",
+    "platform": "Linux + Windows",
+    "blocks": [
+      {
+        "type": "p",
+        "text": "从左侧目录按下面的顺序操作。每完成一个环节先检查结果，出现报错就进入对应的排障文章。"
+      },
+      {
+        "type": "list",
+        "items": [
+          "1. 安装部署 → Linux 基础依赖：确认 node、npm、curl、git 可用。",
+          "2. 安装部署 → 命令目录与 PATH：让当前用户能找到安装后的命令。",
+          "3. 安装部署 → 安装 Codex CLI → Codex 登录与单独测试。",
+          "4. 可选：安装部署 → 安装 CC-Switch；再到模型与服务商中配置需要使用的接口。",
+          "5. 安装部署 → 安装 Paseo：启动 daemon 并检查能否找到 Codex。",
+          "6. 远程连接 → 生成 Windows SSH 密钥 → 启动 SSH Agent → 安装公钥与连接测试。",
+          "7. 如果服务器禁止公钥登录，按开启 Linux 公钥认证处理。",
+          "8. 远程连接 → Paseo Desktop 连接。",
+          "9. 项目与手机 → 添加 Linux 项目；手机使用另看二维码配对。"
+        ]
+      },
+      {
+        "type": "h2",
+        "text": "四个验收结果"
+      },
+      {
+        "type": "table",
+        "headers": [
+          "检查位置",
+          "应该看到"
+        ],
+        "rows": [
+          [
+            "Linux：codex --version",
+            "Codex 版本号"
+          ],
+          [
+            "Linux：paseo daemon status",
+            "daemon 正常运行"
+          ],
+          [
+            "Windows：SSH BatchMode 测试",
+            "直接输出 ok"
+          ],
+          [
+            "Paseo Desktop",
+            "远程主机在线，并能选择 Linux 项目"
+          ]
+        ]
+      },
+      {
+        "type": "note",
+        "title": "已经配置好的电脑",
+        "text": "无需每天重新安装软件、生成密钥或追加公钥。日常使用可直接看“日常命令速查”。"
+      }
+    ]
+  },
+  {
+    "id": "copy-rules",
+    "title": "复制命令与使用约定",
+    "group": "简介",
+    "description": "看清执行位置，每次只复制一条命令。",
+    "platform": "阅读说明",
+    "blocks": [
+      {
+        "type": "table",
+        "headers": [
+          "标记",
+          "在哪里执行"
+        ],
+        "rows": [
+          [
+            "Linux",
+            "已登录服务器的 SSH 终端"
+          ],
+          [
+            "Windows PowerShell",
+            "本地 Windows 的普通 PowerShell"
+          ],
+          [
+            "管理员 PowerShell",
+            "以管理员身份打开的本地 PowerShell"
+          ],
+          [
+            "Paseo 界面",
+            "在 Paseo Desktop 或手机应用里点击操作"
+          ],
+          [
+            "填写内容 / 预期输出",
+            "用于填写或对照，不是执行命令"
+          ]
+        ]
+      },
+      {
+        "type": "list",
+        "items": [
+          "每个命令框只放一个步骤。复制按钮只复制框内内容，不复制说明。",
+          "不要复制终端提示符，例如 root@主机:~# 或 PS C:\\Users\\WINDOWS_USER>。",
+          "命令中的网络地址使用纯 URL，不带 Markdown 的 [链接](链接) 格式。",
+          "YOUR_SERVER_IP、YOUR_PROVIDER_ID、YOUR_MODEL_ID、YOUR_REPOSITORY_URL 等占位符必须先替换。没有给出真实模型 ID，是为了避免把过时或无权限的模型当成通用选项。",
+          "需要输入密码或密钥口令时，终端通常不显示字符，这是正常行为。",
+          "首次 SSH 连接要核对服务器指纹；确认提示处不能输入密码。",
+          "遇到错误先看对应说明，不要继续执行依赖它的修改或重启步骤。",
+          "软件已正常工作时，跳过对应的安装、生成密钥和修复步骤。"
+        ]
+      },
+      {
+        "type": "note",
+        "title": "本手册中的用户身份",
+        "text": "示例以 root 和 /root 展示路径，不要求使用 root。Codex、CC-Switch 与 Paseo 应使用同一个专用 Linux 用户；改用普通用户时，同步替换用户名、主目录以及需要管理员权限的命令。"
+      }
+    ]
+  },
+  {
+    "id": "linux-prerequisites",
+    "title": "Linux 基础依赖",
+    "group": "安装部署",
+    "description": "检查系统、Node.js、npm、curl 与 Git。",
+    "platform": "Linux",
+    "blocks": [
+      {
+        "type": "h2",
+        "text": "逐条检查"
+      },
+      {
+        "type": "code",
+        "lang": "bash",
+        "label": "Linux · 系统发行版",
+        "text": "cat /etc/os-release"
+      },
+      {
+        "type": "code",
+        "lang": "bash",
+        "label": "Linux · CPU 架构",
+        "text": "uname -m"
+      },
+      {
+        "type": "code",
+        "lang": "bash",
+        "label": "Linux · Node.js 版本",
+        "text": "node -v"
+      },
+      {
+        "type": "code",
+        "lang": "bash",
+        "label": "Linux · npm 版本",
+        "text": "npm -v"
+      },
+      {
+        "type": "code",
+        "lang": "bash",
+        "label": "Linux · curl 版本",
+        "text": "curl --version"
+      },
+      {
+        "type": "code",
+        "lang": "bash",
+        "label": "Linux · Git 版本",
+        "text": "git --version"
+      },
+      {
+        "type": "p",
+        "text": "Paseo 的 npm 安装方式依赖 Node.js 和 npm；curl 用于下载安装脚本；Git 用于克隆代码。Node.js 版本需满足当前 Paseo 发布版本的要求。"
+      },
+      {
+        "type": "h2",
+        "text": "缺少命令时"
+      },
+      {
+        "type": "list",
+        "items": [
+          "node 或 npm 不存在：先按 Node.js 官方说明安装当前受支持的 LTS，并确认符合 Paseo 要求。",
+          "curl 或 git 不存在：按 /etc/os-release 中的发行版选择 apt、dnf 等对应的软件包管理器。",
+          "不要把 Ubuntu/Debian 的命令直接套到其他发行版。",
+          "完成依赖安装后，重新执行上面的检查，再继续安装 Codex 与 Paseo。"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "path",
+    "title": "命令目录与 PATH",
+    "group": "安装部署",
+    "description": "解决安装成功后仍提示 command not found。",
+    "platform": "Linux",
+    "blocks": [
+      {
+        "type": "p",
+        "text": "PATH 决定终端去哪些目录查找命令。CC-Switch 默认安装到 $HOME/.local/bin；只有当前用户为 root 时才对应 /root/.local/bin。npm 全局程序可能位于其他目录，以 command -v 输出为准。"
+      },
+      {
+        "type": "h2",
+        "text": "让当前终端立即生效"
+      },
+      {
+        "type": "code",
+        "lang": "bash",
+        "label": "Linux · 加入用户命令目录",
+        "text": "export PATH=\"$HOME/.local/bin:$PATH\""
+      },
+      {
+        "type": "code",
+        "lang": "bash",
+        "label": "Linux · 刷新 Bash 命令缓存",
+        "text": "hash -r"
+      },
+      {
+        "type": "h2",
+        "text": "保存到 Bash 配置"
+      },
+      {
+        "type": "p",
+        "text": "下条命令先检查是否已有完全相同的设置，避免重复追加。此处以 Bash 为例；其他 shell 需要对应的配置文件。"
+      },
+      {
+        "type": "code",
+        "lang": "bash",
+        "label": "Linux · 保存 PATH",
+        "text": "grep -qxF 'export PATH=\"$HOME/.local/bin:$PATH\"' ~/.bashrc || echo 'export PATH=\"$HOME/.local/bin:$PATH\"' >> ~/.bashrc"
+      },
+      {
+        "type": "code",
+        "lang": "bash",
+        "label": "Linux · 重新加载 Bash 配置",
+        "text": "source ~/.bashrc"
+      },
+      {
+        "type": "h2",
+        "text": "确认三个命令的实际路径"
+      },
+      {
+        "type": "code",
+        "lang": "bash",
+        "label": "Linux · 查找 Codex",
+        "text": "command -v codex"
+      },
+      {
+        "type": "code",
+        "lang": "bash",
+        "label": "Linux · 查找 CC-Switch",
+        "text": "command -v cc-switch"
+      },
+      {
+        "type": "code",
+        "lang": "bash",
+        "label": "Linux · 查找 Paseo",
+        "text": "command -v paseo"
+      },
+      {
+        "type": "note",
+        "title": "终端可用，daemon 仍找不到",
+        "text": "正在运行的进程不会自动继承你后来修改的终端 PATH。修改后按“daemon 启停与环境刷新”重新启动，并用 Paseo 的 provider diagnostic 检查实际使用的路径。"
+      }
+    ]
+  },
+  {
+    "id": "codex-install",
+    "title": "安装 Codex CLI",
+    "group": "安装部署",
+    "description": "安装实际执行 AI 任务的命令行程序。",
+    "platform": "Linux",
+    "blocks": [
+      {
+        "type": "h2",
+        "text": "1. 先检查已有版本"
+      },
+      {
+        "type": "code",
+        "lang": "bash",
+        "label": "Linux · 检查 Codex",
+        "text": "codex --version"
+      },
+      {
+        "type": "p",
+        "text": "能输出版本号就说明已经安装，可继续登录和测试。只有命令不存在时才需要安装。"
+      },
+      {
+        "type": "h2",
+        "text": "2. 选择一种安装方式"
+      },
+      {
+        "type": "p",
+        "text": "方式 A：使用官方安装脚本。"
+      },
+      {
+        "type": "code",
+        "lang": "bash",
+        "label": "Linux · 官方安装脚本",
+        "text": "curl -fsSL https://chatgpt.com/codex/install.sh | sh"
+      },
+      {
+        "type": "p",
+        "text": "方式 B：已有 Node.js / npm 时，也可以使用 npm。A、B 二选一，不要为了同一次安装反复交替执行。"
+      },
+      {
+        "type": "code",
+        "lang": "bash",
+        "label": "Linux · 替代安装方式：npm",
+        "text": "npm install -g @openai/codex"
+      },
+      {
+        "type": "h2",
+        "text": "3. 验证安装"
+      },
+      {
+        "type": "code",
+        "lang": "bash",
+        "label": "Linux · 重新检查版本",
+        "text": "codex --version"
+      },
+      {
+        "type": "code",
+        "lang": "bash",
+        "label": "Linux · 查看正在使用的路径",
+        "text": "command -v codex"
+      },
+      {
+        "type": "code",
+        "lang": "bash",
+        "label": "Linux · 检查是否存在多个安装位置",
+        "text": "type -a codex"
+      },
+      {
+        "type": "p",
+        "text": "如果安装提示成功但命令找不到，先查看“命令目录与 PATH”。如果出现多个路径，Paseo 可能调用了另一份版本；先查清路径，再更新需要使用的那一份。"
+      }
+    ]
+  },
+  {
+    "id": "codex-login",
+    "title": "Codex 登录与单独测试",
+    "group": "安装部署",
+    "description": "先确认 Codex 能独立使用，再接入 Paseo。",
+    "platform": "Linux",
+    "blocks": [
+      {
+        "type": "h2",
+        "text": "使用官方账号登录"
+      },
+      {
+        "type": "p",
+        "text": "没有图形界面的 Linux 服务器可先使用设备码登录。根据终端提示，在本地浏览器打开地址并输入一次性代码。账号或组织设置需要允许该登录方式。"
+      },
+      {
+        "type": "code",
+        "lang": "bash",
+        "label": "Linux · 设备码登录",
+        "text": "codex login --device-auth"
+      },
+      {
+        "type": "p",
+        "text": "如果设备码不可用，使用普通登录流程，并根据 CLI 提示处理浏览器和回调。下面是替代方式，无需在已成功登录后重复执行。"
+      },
+      {
+        "type": "code",
+        "lang": "bash",
+        "label": "Linux · 替代方式：普通登录",
+        "text": "codex login"
+      },
+      {
+        "type": "code",
+        "lang": "bash",
+        "label": "Linux · 查看登录状态",
+        "text": "codex login status"
+      },
+      {
+        "type": "note",
+        "title": "已配置第三方服务商时",
+        "text": "先明确使用官方账号还是第三方 API 配置。不要用重复登录来盲目覆盖已有配置；CC-Switch 管理的接口能否使用，以该配置下实际执行请求的结果为准。"
+      },
+      {
+        "type": "h2",
+        "text": "在测试目录启动"
+      },
+      {
+        "type": "code",
+        "lang": "bash",
+        "label": "Linux · 创建测试目录",
+        "text": "mkdir -p /root/codex-test"
+      },
+      {
+        "type": "code",
+        "lang": "bash",
+        "label": "Linux · 进入测试目录",
+        "text": "cd /root/codex-test"
+      },
+      {
+        "type": "code",
+        "lang": "bash",
+        "label": "Linux · 启动 Codex",
+        "text": "codex"
+      },
+      {
+        "type": "code",
+        "lang": "text",
+        "label": "在 Codex 对话中输入",
+        "text": "只回复 OK，不读取或修改文件。"
+      },
+      {
+        "type": "p",
+        "text": "能启动界面只说明程序能运行；成功收到模型回复，才同时验证了当前认证、网络和模型调用。"
+      }
+    ]
+  },
+  {
+    "id": "cc-switch-install",
+    "title": "安装 CC-Switch CLI",
+    "group": "安装部署",
+    "description": "使用 SaladDay/cc-switch-cli 项目的安装地址，并处理 PATH。",
+    "platform": "Linux",
+    "blocks": [
+      {
+        "type": "p",
+        "text": "这里的 CC-Switch CLI 来自 SaladDay/cc-switch-cli，是用于管理服务商配置的第三方工具。仅使用官方 Codex 登录时，它是可选项。"
+      },
+      {
+        "type": "h2",
+        "text": "1. 检查是否已经安装"
+      },
+      {
+        "type": "code",
+        "lang": "bash",
+        "label": "Linux · 检查 CC-Switch",
+        "text": "cc-switch --version"
+      },
+      {
+        "type": "h2",
+        "text": "2. 安装或更新"
+      },
+      {
+        "type": "code",
+        "lang": "bash",
+        "label": "Linux · CC-Switch 项目安装脚本",
+        "text": "curl -fsSL https://github.com/SaladDay/cc-switch-cli/releases/latest/download/install.sh | bash"
+      },
+      {
+        "type": "p",
+        "text": "安装器检测到已有版本时，按提示选择 Update 才会更新；首次使用时按安装提示操作。命令中不能包含 [网址](网址) 这种 Markdown 链接括号。"
+      },
+      {
+        "type": "h2",
+        "text": "3. 让当前 shell 找到命令"
+      },
+      {
+        "type": "code",
+        "lang": "bash",
+        "label": "Linux · 加入 PATH",
+        "text": "export PATH=\"$HOME/.local/bin:$PATH\""
+      },
+      {
+        "type": "p",
+        "text": "永久保存的方法见“命令目录与 PATH”，无需在多处重复追加。"
+      },
+      {
+        "type": "code",
+        "lang": "bash",
+        "label": "Linux · 验证版本",
+        "text": "cc-switch --version"
+      },
+      {
+        "type": "code",
+        "lang": "bash",
+        "label": "Linux · 查看路径",
+        "text": "command -v cc-switch"
+      },
+      {
+        "type": "h2",
+        "text": "4. 打开交互界面"
+      },
+      {
+        "type": "code",
+        "lang": "bash",
+        "label": "Linux · 打开 CC-Switch",
+        "text": "cc-switch"
+      },
+      {
+        "type": "p",
+        "text": "默认安装位置为 $HOME/.local/bin/cc-switch。能启动后，再到“CC-Switch 与服务商配置”区分持久切换和单次启动。"
+      }
+    ]
+  },
+  {
+    "id": "paseo-install",
+    "title": "安装 Paseo 与启动 daemon",
+    "group": "安装部署",
+    "description": "在 Linux 上运行服务，让桌面端或手机连接。",
+    "platform": "Linux",
+    "blocks": [
+      {
+        "type": "h2",
+        "text": "1. 检查和安装"
+      },
+      {
+        "type": "code",
+        "lang": "bash",
+        "label": "Linux · 检查 Paseo",
+        "text": "paseo --version"
+      },
+      {
+        "type": "p",
+        "text": "命令不存在时再执行安装；Node.js 和 npm 需要已经可用。"
+      },
+      {
+        "type": "code",
+        "lang": "bash",
+        "label": "Linux · 安装 Paseo CLI",
+        "text": "npm install -g @getpaseo/cli"
+      },
+      {
+        "type": "code",
+        "lang": "bash",
+        "label": "Linux · 验证版本",
+        "text": "paseo --version"
+      },
+      {
+        "type": "code",
+        "lang": "bash",
+        "label": "Linux · 查看 Paseo 路径",
+        "text": "command -v paseo"
+      },
+      {
+        "type": "h2",
+        "text": "2. 启动与检查"
+      },
+      {
+        "type": "code",
+        "lang": "bash",
+        "label": "Linux · 启动 daemon",
+        "text": "paseo daemon start"
+      },
+      {
+        "type": "code",
+        "lang": "bash",
+        "label": "Linux · 检查运行状态",
+        "text": "paseo daemon status"
+      },
+      {
+        "type": "code",
+        "lang": "bash",
+        "label": "Linux · 检查 Paseo 实际调用的 Codex",
+        "text": "paseo provider diagnostic codex"
+      },
+      {
+        "type": "p",
+        "text": "Paseo 默认 daemon 端口为 6767。使用 SSH 转发访问远程回环地址即可，不需要把 6767 直接开放到公网；以 status 的实际监听信息为准。"
+      },
+      {
+        "type": "note",
+        "title": "同一个 Linux 用户",
+        "text": "用哪个用户启动 daemon，就要让该用户能找到 Codex 并读取其配置。root 的 Codex 登录和配置不会自动出现在另一个普通用户下。"
+      },
+      {
+        "type": "p",
+        "text": "只有打算使用手机配对时，才继续“手机二维码与 Relay”。Windows Desktop 使用 SSH 的流程见“Paseo Desktop 连接”。"
+      }
+    ]
+  },
+  {
+    "id": "ssh-key",
+    "title": "生成 Windows SSH 密钥",
+    "group": "远程连接",
+    "description": "先检查已有密钥，避免覆盖原来的登录凭据。",
+    "platform": "Windows PowerShell",
+    "blocks": [
+      {
+        "type": "h2",
+        "text": "1. 检查本机 OpenSSH"
+      },
+      {
+        "type": "code",
+        "lang": "powershell",
+        "label": "Windows PowerShell · 检查 SSH",
+        "text": "ssh -V"
+      },
+      {
+        "type": "h2",
+        "text": "2. 检查已有密钥"
+      },
+      {
+        "type": "code",
+        "lang": "powershell",
+        "label": "Windows PowerShell · 查看是否已有私钥",
+        "text": "Test-Path \"$env:USERPROFILE\\.ssh\\id_ed25519\""
+      },
+      {
+        "type": "code",
+        "lang": "powershell",
+        "label": "Windows PowerShell · 查看是否已有公钥",
+        "text": "Test-Path \"$env:USERPROFILE\\.ssh\\id_ed25519.pub\""
+      },
+      {
+        "type": "p",
+        "text": "如果两条都返回 True，通常可以直接使用已有密钥，跳到 SSH Agent。不要重复生成或覆盖正在使用的密钥。"
+      },
+      {
+        "type": "h2",
+        "text": "3. 仅在没有密钥时生成"
+      },
+      {
+        "type": "code",
+        "lang": "powershell",
+        "label": "Windows PowerShell · 生成 ED25519 密钥",
+        "text": "ssh-keygen -t ed25519"
+      },
+      {
+        "type": "list",
+        "items": [
+          "保存路径提示可按 Enter 使用默认路径。",
+          "如果提示文件已存在，不要覆盖已有密钥；取消并先检查它的用途。",
+          "可以设置密钥口令，之后通过 ssh-agent 解锁，让 Paseo 无需交互输入口令。",
+          "id_ed25519 是私钥，留在 Windows；id_ed25519.pub 是公钥，安装到 Linux。"
+        ]
+      },
+      {
+        "type": "note",
+        "title": "服务器密码与密钥口令不同",
+        "text": "服务器密码用于首次手动 SSH 登录；密钥口令用于解锁本机私钥。两者不要混淆，也不要输入到主机指纹确认提示中。"
+      }
+    ]
+  },
+  {
+    "id": "ssh-agent",
+    "title": "启动 Windows SSH Agent",
+    "group": "远程连接",
+    "description": "解决拒绝访问、无法连接 agent，并加载现有私钥。",
+    "platform": "Windows PowerShell",
+    "blocks": [
+      {
+        "type": "h2",
+        "text": "1. 管理员窗口配置服务"
+      },
+      {
+        "type": "p",
+        "text": "开始菜单搜索 PowerShell，右键选择“以管理员身份运行”。管理员权限用于修改和启动 Windows 服务。"
+      },
+      {
+        "type": "code",
+        "lang": "powershell",
+        "label": "管理员 PowerShell · 设置自动启动",
+        "text": "Set-Service -Name ssh-agent -StartupType Automatic"
+      },
+      {
+        "type": "code",
+        "lang": "powershell",
+        "label": "管理员 PowerShell · 启动服务",
+        "text": "Start-Service -Name ssh-agent"
+      },
+      {
+        "type": "code",
+        "lang": "powershell",
+        "label": "管理员 PowerShell · 查看状态",
+        "text": "Get-Service -Name ssh-agent"
+      },
+      {
+        "type": "p",
+        "text": "Status 为 Running 表示服务已运行。“拒绝访问 / CouldNotSetService”通常说明当前窗口没有相应管理员权限。"
+      },
+      {
+        "type": "h2",
+        "text": "2. 普通用户窗口加载密钥"
+      },
+      {
+        "type": "p",
+        "text": "回到运行 Paseo 的同一个 Windows 用户的普通 PowerShell。若管理员窗口使用了另一套账户，尤其要避免在那个账户下添加密钥。"
+      },
+      {
+        "type": "code",
+        "lang": "powershell",
+        "label": "Windows PowerShell · 加载私钥",
+        "text": "ssh-add \"$env:USERPROFILE\\.ssh\\id_ed25519\""
+      },
+      {
+        "type": "code",
+        "lang": "powershell",
+        "label": "Windows PowerShell · 查看已加载密钥",
+        "text": "ssh-add -l"
+      },
+      {
+        "type": "p",
+        "text": "Identity added 表示私钥已加入 agent。它只验证本机这一步；服务器是否接受公钥，还要执行下一篇的连接测试。"
+      },
+      {
+        "type": "note",
+        "title": "Error connecting to agent",
+        "text": "先确认服务处于 Running，再检查 ssh 和 ssh-add 是否来自一致的 OpenSSH 环境。无需因此重新生成密钥。"
+      }
+    ]
+  },
+  {
+    "id": "ssh-test",
+    "title": "安装公钥与连接测试",
+    "group": "远程连接",
+    "description": "将公钥加入 Linux，并验证无交互 SSH。",
+    "platform": "Windows + Linux",
+    "blocks": [
+      {
+        "type": "p",
+        "text": "先将 YOUR_SERVER_IP 替换为自己的服务器地址，并根据实际情况替换 root。公钥已正确安装且测试通过时跳过追加步骤。所有 /root 路径也必须与 SSH 用户一致。"
+      },
+      {
+        "type": "h2",
+        "text": "1. 从 Windows 安装公钥"
+      },
+      {
+        "type": "code",
+        "lang": "powershell",
+        "label": "Windows PowerShell · 向 Linux 追加公钥",
+        "text": "Get-Content \"$env:USERPROFILE\\.ssh\\id_ed25519.pub\" | ssh root@YOUR_SERVER_IP \"umask 077; mkdir -p ~/.ssh; cat >> ~/.ssh/authorized_keys\""
+      },
+      {
+        "type": "p",
+        "text": "首次连接会要求确认主机指纹；核对后才输入 yes。出现服务器 password 提示时再输入服务器密码。整条管道命令作为一个步骤复制。"
+      },
+      {
+        "type": "h2",
+        "text": "2. Linux 上确认权限"
+      },
+      {
+        "type": "code",
+        "lang": "bash",
+        "label": "Linux · 设置密钥目录权限",
+        "text": "chmod 700 /root/.ssh"
+      },
+      {
+        "type": "code",
+        "lang": "bash",
+        "label": "Linux · 设置公钥文件权限",
+        "text": "chmod 600 /root/.ssh/authorized_keys"
+      },
+      {
+        "type": "code",
+        "lang": "bash",
+        "label": "Linux · 确认目录和文件所有者",
+        "text": "chown root:root /root/.ssh /root/.ssh/authorized_keys"
+      },
+      {
+        "type": "h2",
+        "text": "3. Windows 测试无交互登录"
+      },
+      {
+        "type": "code",
+        "lang": "powershell",
+        "label": "Windows PowerShell · Paseo 连接前的关键测试",
+        "text": "ssh -o BatchMode=yes root@YOUR_SERVER_IP \"echo ok\""
+      },
+      {
+        "type": "code",
+        "lang": "text",
+        "label": "预期输出",
+        "text": "ok"
+      },
+      {
+        "type": "p",
+        "text": "BatchMode 禁止交互式密码提示，因此成功输出 ok 才能证明这条连接不依赖临时手输密码。若 Permission denied，继续检查 Linux 公钥认证设置。"
+      },
+      {
+        "type": "note",
+        "title": "不要只凭公钥注释判断匹配",
+        "text": "authorized_keys 中出现 your-key-comment 只说明包含该注释，不足以证明它与当前私钥是一对。排障时应比较公钥指纹或完整公钥，而无需暴露私钥。"
+      }
+    ]
+  },
+  {
+    "id": "sshd-pubkey",
+    "title": "开启 Linux 公钥认证",
+    "group": "远程连接",
+    "description": "排查有效配置为 PubkeyAuthentication no 的情况。",
+    "platform": "Linux",
+    "blocks": [
+      {
+        "type": "p",
+        "text": "仅在检查确认 pubkeyauthentication no 时按此流程排查，不假定配置位于某个固定行号。修改期间保持现有 SSH 窗口打开，保留云控制台等备用访问方式。下方修改、语法检查和服务重载需要管理员权限；普通用户请按系统要求使用 sudo。"
+      },
+      {
+        "type": "note",
+        "title": "先排除 Match 块",
+        "text": "如果配置文件含 Match 块或多处 PubkeyAuthentication 设置，下面的整文件 sed 替换不适用。应编辑已经定位到的全局配置，并按实际连接条件检查有效值，不要批量改动其他用户的规则。"
+      },
+      {
+        "type": "h2",
+        "text": "1. 检查有效配置"
+      },
+      {
+        "type": "code",
+        "lang": "bash",
+        "label": "Linux · 检查 SSH 认证设置",
+        "text": "sshd -T | grep -E 'pubkeyauthentication|permitrootlogin|authorizedkeysfile|authenticationmethods'"
+      },
+      {
+        "type": "p",
+        "text": "若提示 sshd: command not found，可将这条命令中的 sshd 改成 /usr/sbin/sshd。公钥认证应为 yes；root 是否允许登录还受 PermitRootLogin 和其他认证规则影响。"
+      },
+      {
+        "type": "h2",
+        "text": "2. 定位配置文件"
+      },
+      {
+        "type": "code",
+        "lang": "bash",
+        "label": "Linux · 找到 PubkeyAuthentication 配置",
+        "text": "grep -RniE '^[[:space:]]*PubkeyAuthentication[[:space:]]' /etc/ssh/sshd_config /etc/ssh/sshd_config.d 2>/dev/null"
+      },
+      {
+        "type": "h2",
+        "text": "3. 备份，再编辑已确认的文件"
+      },
+      {
+        "type": "code",
+        "lang": "bash",
+        "label": "Linux · 创建带时间的备份",
+        "text": "cp -a /etc/ssh/sshd_config \"/etc/ssh/sshd_config.paseo-backup-$(date +%Y%m%d-%H%M%S)\""
+      },
+      {
+        "type": "p",
+        "text": "下面修改适用于已经确认在主配置里存在独立一行 PubkeyAuthentication no 的情况。若实际来源是其他文件或 Match 块，先按该文件和规则处理。"
+      },
+      {
+        "type": "code",
+        "lang": "bash",
+        "label": "Linux · 将已定位的 no 改为 yes",
+        "text": "sed -i -E 's/^[[:space:]]*PubkeyAuthentication[[:space:]]+no[[:space:]]*$/PubkeyAuthentication yes/' /etc/ssh/sshd_config"
+      },
+      {
+        "type": "code",
+        "lang": "bash",
+        "label": "Linux · 检查修改结果",
+        "text": "grep -nE '^[[:space:]]*PubkeyAuthentication[[:space:]]' /etc/ssh/sshd_config"
+      },
+      {
+        "type": "h2",
+        "text": "4. 检查语法后重新加载"
+      },
+      {
+        "type": "code",
+        "lang": "bash",
+        "label": "Linux · 验证配置语法",
+        "text": "sshd -t"
+      },
+      {
+        "type": "p",
+        "text": "没有报错才继续。若出现错误，先修复或恢复备份，不要执行后面的重新加载。"
+      },
+      {
+        "type": "code",
+        "lang": "bash",
+        "label": "Linux · 重新加载 SSH 服务",
+        "text": "systemctl reload ssh"
+      },
+      {
+        "type": "p",
+        "text": "只有系统提示 ssh.service 不存在时，才改用下面的服务名；不要把两条当作都必须执行。"
+      },
+      {
+        "type": "code",
+        "lang": "bash",
+        "label": "Linux · 替代服务名",
+        "text": "systemctl reload sshd"
+      },
+      {
+        "type": "code",
+        "lang": "bash",
+        "label": "Linux · 再次确认有效值",
+        "text": "sshd -T | grep -E 'pubkeyauthentication|permitrootlogin|authorizedkeysfile'"
+      },
+      {
+        "type": "h2",
+        "text": "5. 回到 Windows 验收"
+      },
+      {
+        "type": "code",
+        "lang": "powershell",
+        "label": "Windows PowerShell · 再次测试",
+        "text": "ssh -o BatchMode=yes root@YOUR_SERVER_IP \"echo ok\""
+      },
+      {
+        "type": "p",
+        "text": "必须以这次实际连接结果为准。sshd -T 的全局输出不一定覆盖特定来源地址或用户的 Match 条件；若仍失败，还需要结合详细 SSH 日志检查。"
+      }
+    ]
+  },
+  {
+    "id": "desktop-ssh",
+    "title": "Paseo Desktop 连接",
+    "group": "远程连接",
+    "description": "填写 SSH 地址，分清 SSH 端口与 daemon 端口。",
+    "platform": "Paseo 界面",
+    "blocks": [
+      {
+        "type": "p",
+        "text": "前提是 Linux daemon 正在运行，并且 Windows 的 BatchMode SSH 测试直接输出 ok。Paseo 使用本机 OpenSSH 环境，不会读取其他 SSH 软件里保存的服务器密码。"
+      },
+      {
+        "type": "list",
+        "items": [
+          "打开 Paseo 的添加主机入口，选择“远程 SSH / Remote SSH”。",
+          "在 SSH 主机字段填写下面的地址。",
+          "点击连接，确认出现正确的远程主机名。",
+          "连接后选择远程 Linux 项目，再新建工作区。"
+        ]
+      },
+      {
+        "type": "code",
+        "lang": "text",
+        "label": "Paseo · SSH 主机字段",
+        "text": "ssh://root@YOUR_SERVER_IP"
+      },
+      {
+        "type": "h2",
+        "text": "端口如何填写"
+      },
+      {
+        "type": "table",
+        "headers": [
+          "情况",
+          "地址示例"
+        ],
+        "rows": [
+          [
+            "默认 SSH 端口为 22",
+            "ssh://root@YOUR_SERVER_IP"
+          ],
+          [
+            "显式写出默认 SSH 端口",
+            "ssh://root@YOUR_SERVER_IP:22"
+          ],
+          [
+            "假设 SSH 改为 2222",
+            "ssh://root@YOUR_SERVER_IP:2222"
+          ],
+          [
+            "假设 daemon 改为 7777",
+            "ssh://root@YOUR_SERVER_IP?daemonPort=7777"
+          ]
+        ]
+      },
+      {
+        "type": "p",
+        "text": "冒号后的端口指 SSH 服务。Paseo 默认通过 SSH 访问远端的 127.0.0.1:6767，因此不要把地址误写成 ssh://root@YOUR_SERVER_IP:6767。"
+      },
+      {
+        "type": "h2",
+        "text": "怎样判断下一步"
+      },
+      {
+        "type": "list",
+        "items": [
+          "远程主机旁的绿色圆点表示连接在线。",
+          "Choose a project 表示还没选项目，进入“添加 Linux 项目”。",
+          "SSH 测试成功但 Paseo 无法连接：先检查远端 paseo daemon status。",
+          "菜单名称会随版本和语言变化，以界面中的添加主机、远程 SSH 入口为准。"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "project-paths",
+    "title": "Linux 项目路径怎么看",
+    "group": "项目与手机",
+    "description": "明确代码在哪台电脑，避免把 Windows 路径填到 Linux。",
+    "platform": "Linux + Paseo 界面",
+    "blocks": [
+      {
+        "type": "p",
+        "text": "当前选择的是 Linux 远程主机，因此项目目录必须在那台服务器上。Windows 的 C: 盘不会因为建立 SSH 连接就自动映射过去。"
+      },
+      {
+        "type": "table",
+        "headers": [
+          "路径",
+          "所属位置",
+          "远程 Linux 项目能否直接选"
+        ],
+        "rows": [
+          [
+            "/root/my-project",
+            "Linux 的 root 用户目录",
+            "目录存在时可以"
+          ],
+          [
+            "/home/ubuntu/app",
+            "Linux 的 ubuntu 用户目录",
+            "有权限且目录存在时可以"
+          ],
+          [
+            "C:\\Users\\WINDOWS_USER\\Desktop\\my-project",
+            "Windows 本地磁盘",
+            "不能直接作为 Linux 路径"
+          ]
+        ]
+      },
+      {
+        "type": "h2",
+        "text": "查看当前目录"
+      },
+      {
+        "type": "code",
+        "lang": "bash",
+        "label": "Linux · 当前完整路径",
+        "text": "pwd"
+      },
+      {
+        "type": "code",
+        "lang": "bash",
+        "label": "Linux · 当前目录内容",
+        "text": "ls -la"
+      },
+      {
+        "type": "p",
+        "text": "例如 pwd 输出 /root，ls 中有 my-project 文件夹，那么项目完整路径为 /root/my-project。进入项目后再执行 pwd，可以直接复制完整路径。"
+      },
+      {
+        "type": "code",
+        "lang": "bash",
+        "label": "Linux · 进入示例项目",
+        "text": "cd /root/my-project"
+      },
+      {
+        "type": "code",
+        "lang": "bash",
+        "label": "Linux · 获取可填写的完整路径",
+        "text": "pwd"
+      },
+      {
+        "type": "p",
+        "text": "如果项目只在 Windows，可以通过 SFTP 上传，或从 Git 仓库克隆到 Linux。若想操作本机文件，应在 Paseo 中选择本地主机。"
+      }
+    ]
+  },
+  {
+    "id": "project-add",
+    "title": "添加 Linux 项目",
+    "group": "项目与手机",
+    "description": "新建目录或克隆仓库，并处理 Choose a project 提示。",
+    "platform": "Linux + Paseo 界面",
+    "blocks": [
+      {
+        "type": "h2",
+        "text": "方式 A：新建空项目目录"
+      },
+      {
+        "type": "code",
+        "lang": "bash",
+        "label": "Linux · 创建项目目录",
+        "text": "mkdir -p /root/my-project"
+      },
+      {
+        "type": "h2",
+        "text": "方式 B：使用已有 Git 仓库"
+      },
+      {
+        "type": "p",
+        "text": "先把 YOUR_REPOSITORY_URL 替换成真实仓库地址。目标目录必须适合用于此次克隆；若已经创建并放入文件，先检查目录内容。"
+      },
+      {
+        "type": "code",
+        "lang": "bash",
+        "label": "Linux · 克隆仓库，先替换占位地址",
+        "text": "git clone YOUR_REPOSITORY_URL /root/my-project"
+      },
+      {
+        "type": "h2",
+        "text": "在 Paseo 选择目录"
+      },
+      {
+        "type": "list",
+        "items": [
+          "确认主机选择的是目标远程 Linux，而不是 Windows 本地主机。",
+          "点击左侧“添加 project”或中间“Choose project”中的添加入口。",
+          "选择或填写 Linux 上实际存在的项目目录。",
+          "选中项目后新建工作区，再发送任务。"
+        ]
+      },
+      {
+        "type": "code",
+        "lang": "text",
+        "label": "Paseo · 示例项目路径",
+        "text": "/root/my-project"
+      },
+      {
+        "type": "code",
+        "lang": "text",
+        "label": "可用于首次测试的任务",
+        "text": "请只查看项目结构，说明主要文件和运行方式，先不要修改文件。"
+      },
+      {
+        "type": "note",
+        "title": "Choose a project",
+        "text": "这条提示只表示当前尚未选择项目。远程主机已在线时，无需因此重新安装 SSH、Codex 或 Paseo。"
+      }
+    ]
+  },
+  {
+    "id": "mobile-pair",
+    "title": "手机二维码与 Relay",
+    "group": "项目与手机",
+    "description": "从 Linux 生成 Paseo 配对二维码，让手机连接。",
+    "platform": "Linux + 手机 Paseo",
+    "blocks": [
+      {
+        "type": "p",
+        "text": "Windows Desktop 已采用 SSH 时可以继续使用原连接。手机需要配对时，在运行 daemon 的同一个 Linux 用户下生成二维码。"
+      },
+      {
+        "type": "h2",
+        "text": "1. 确认 daemon 在线"
+      },
+      {
+        "type": "code",
+        "lang": "bash",
+        "label": "Linux · 查看运行状态",
+        "text": "paseo daemon status"
+      },
+      {
+        "type": "p",
+        "text": "只有 daemon 未运行时才执行启动。"
+      },
+      {
+        "type": "code",
+        "lang": "bash",
+        "label": "Linux · 必要时启动 daemon",
+        "text": "paseo daemon start"
+      },
+      {
+        "type": "h2",
+        "text": "2. 显示配对二维码"
+      },
+      {
+        "type": "code",
+        "lang": "bash",
+        "label": "Linux · 生成配对信息",
+        "text": "paseo daemon pair"
+      },
+      {
+        "type": "p",
+        "text": "按当前版本的提示完成配对。如果跨网络连接需要 Relay，按提示启用；终端会显示可扫描的二维码或配对链接。"
+      },
+      {
+        "type": "code",
+        "lang": "bash",
+        "label": "Linux · 查看当前版本的配对选项",
+        "text": "paseo daemon pair --help"
+      },
+      {
+        "type": "p",
+        "text": "若帮助中包含 --relay，可用下面的方式明确启用 Relay。它是 pair 的替代调用，不必与上一条重复执行。"
+      },
+      {
+        "type": "code",
+        "lang": "bash",
+        "label": "Linux · 支持该选项时启用 Relay 配对",
+        "text": "paseo daemon pair --relay"
+      },
+      {
+        "type": "h2",
+        "text": "3. 在手机完成配对"
+      },
+      {
+        "type": "list",
+        "items": [
+          "手机 Paseo 打开添加主机或配对设备入口。",
+          "扫描终端中完整的二维码；显示不完整时可尝试粘贴配对链接。",
+          "检查手机选到的主机和 Linux 项目是否正确。",
+          "Relay 方式不需要给手机开放服务器的 6767；手机也不依赖 Windows 的 SSH Agent。"
+        ]
+      },
+      {
+        "type": "note",
+        "title": "配对信息保密",
+        "text": "二维码和配对链接包含连接所需的敏感信息，不要放进公开截图或共享文档。这里仅记录生成方式，不保存实际二维码。"
+      }
+    ]
+  },
+  {
+    "id": "provider-switch",
+    "title": "CC-Switch 与服务商配置",
+    "group": "模型与服务商",
+    "description": "区分持久配置切换和只影响一个子进程的临时启动。",
+    "platform": "Linux",
+    "blocks": [
+      {
+        "type": "p",
+        "text": "Paseo 启动的是 Linux 上的 Codex。要影响它，服务商配置必须在相同 Linux 用户下，并且能被 Paseo 创建的 Codex 进程读取。"
+      },
+      {
+        "type": "h2",
+        "text": "查看已有服务商"
+      },
+      {
+        "type": "code",
+        "lang": "bash",
+        "label": "Linux · 查看 Codex 服务商列表",
+        "text": "cc-switch --app codex provider list"
+      },
+      {
+        "type": "code",
+        "lang": "bash",
+        "label": "Linux · 打开交互配置界面",
+        "text": "cc-switch"
+      },
+      {
+        "type": "p",
+        "text": "在交互界面中确认选中的应用是 Codex，再查看或切换实际要使用的配置。输入 API Key 的操作在本机终端完成，不把密钥写进本手册。"
+      },
+      {
+        "type": "h2",
+        "text": "全局切换与单次启动的区别"
+      },
+      {
+        "type": "table",
+        "headers": [
+          "方式",
+          "影响范围",
+          "对 Paseo 的含义"
+        ],
+        "rows": [
+          [
+            "持久 / 全局配置切换",
+            "更新该 Linux 用户后续 Codex 进程读取的配置",
+            "需要验证 Paseo 新建进程实际读到该配置"
+          ],
+          [
+            "cc-switch start codex …",
+            "启动一个带指定配置的 Codex 子进程",
+            "不保证改变 Paseo 后续单独启动的 Codex"
+          ]
+        ]
+      },
+      {
+        "type": "p",
+        "text": "以下两种方式按目的选择，不要连续照抄。YOUR_PROVIDER_ID 要替换为上方服务商列表中真实存在的 ID。"
+      },
+      {
+        "type": "code",
+        "lang": "bash",
+        "label": "Linux · 持久切换，先替换服务商 ID",
+        "text": "cc-switch --app codex provider switch YOUR_PROVIDER_ID"
+      },
+      {
+        "type": "p",
+        "text": "上面用于切换该 Linux 用户的 Codex 配置。下面只启动一次带指定配置的 Codex，不等于给 Paseo 全局切换。"
+      },
+      {
+        "type": "code",
+        "lang": "bash",
+        "label": "Linux · 单次启动，先替换服务商 ID",
+        "text": "cc-switch start codex YOUR_PROVIDER_ID"
+      },
+      {
+        "type": "h2",
+        "text": "配置切换后的检查"
+      },
+      {
+        "type": "code",
+        "lang": "bash",
+        "label": "Linux · 检查 Paseo 的 Codex 环境",
+        "text": "paseo provider diagnostic codex"
+      },
+      {
+        "type": "p",
+        "text": "修改环境变量或路径后，按“daemon 启停与环境刷新”停止再启动。仅修改持久配置时，新建 Codex 会话后测试实际模型请求；不要凭界面名称判断接口已切换成功。"
+      }
+    ]
+  },
+  {
+    "id": "models-missing",
+    "title": "模型缺少，刷新不出来",
+    "group": "模型与服务商",
+    "description": "四条命令先定位是界面、daemon、Codex 还是接口问题。",
+    "platform": "Linux + Paseo 界面",
+    "blocks": [
+      {
+        "type": "p",
+        "text": "不同客户端可能连接不同主机、Codex 版本、账号或第三方接口，因此模型菜单不一定相同。先检查 Paseo 当前连接的那台 Linux，再决定是否更新或手动添加。"
+      },
+      {
+        "type": "h2",
+        "text": "先执行这四条"
+      },
+      {
+        "type": "code",
+        "lang": "bash",
+        "label": "Linux · 1 / 4：Codex 版本",
+        "text": "codex --version"
+      },
+      {
+        "type": "code",
+        "lang": "bash",
+        "label": "Linux · 2 / 4：Paseo 版本",
+        "text": "paseo --version"
+      },
+      {
+        "type": "code",
+        "lang": "bash",
+        "label": "Linux · 3 / 4：Paseo 实际使用的 Codex",
+        "text": "paseo provider diagnostic codex"
+      },
+      {
+        "type": "code",
+        "lang": "bash",
+        "label": "Linux · 4 / 4：Paseo 发现的模型",
+        "text": "paseo provider models codex"
+      },
+      {
+        "type": "h2",
+        "text": "按结果选择下一步"
+      },
+      {
+        "type": "table",
+        "headers": [
+          "观察到的结果",
+          "下一步"
+        ],
+        "rows": [
+          [
+            "命令列出了模型，界面没有",
+            "确认界面是同一远程主机和 Codex 配置，清空搜索条件，再刷新并重新打开菜单"
+          ],
+          [
+            "命令也没列出该模型",
+            "检查 Codex 版本、实际服务商、模型目录发现和固定 models 配置"
+          ],
+          [
+            "diagnostic 中路径或版本与终端不同",
+            "查找多份安装，统一 Paseo 实际调用的 Codex 路径"
+          ],
+          [
+            "命令提示未知子命令",
+            "查看当前版本帮助，按安装来源更新相应软件"
+          ],
+          [
+            "能选模型，实际请求失败",
+            "依据 model_not_found、权限或网络报错排查接口，不要只重复刷新"
+          ]
+        ]
+      },
+      {
+        "type": "h2",
+        "text": "保留最少的排障证据"
+      },
+      {
+        "type": "list",
+        "items": [
+          "记录四条命令的结果和缺少的准确 Model ID。",
+          "记录 Paseo 当前选择的主机，以及使用官方账号还是第三方接口。",
+          "只分享与版本、路径、模型和错误有关的输出；先遮盖其中可能出现的凭据。",
+          "没有完成实际模型请求前，不把“菜单出现了”写成“模型已经可用”。"
+        ]
+      },
+      {
+        "type": "note",
+        "title": "诊断与验证",
+        "text": "本文提供排查流程，不代表任何服务器的问题已经修复。以目标服务器的诊断结果和一次实际模型回复为准。"
+      }
+    ]
+  },
+  {
+    "id": "model-add",
+    "title": "手动添加模型",
+    "group": "模型与服务商",
+    "description": "服务商支持模型，但菜单没有时，补充准确 Model ID。",
+    "platform": "Paseo 界面",
+    "blocks": [
+      {
+        "type": "h2",
+        "text": "添加之前"
+      },
+      {
+        "type": "p",
+        "text": "先从实际服务商的模型清单确认准确的 Model ID。界面显示名称是标签，不能据此推断接口一定支持同名模型。"
+      },
+      {
+        "type": "h2",
+        "text": "界面操作"
+      },
+      {
+        "type": "list",
+        "items": [
+          "在模型菜单点击 Codex 右侧的齿轮，进入当前主机的提供方设置。",
+          "找到“添加 Model / Add model”。不同版本入口位置可能变化。",
+          "Model ID 填写服务商接受的准确标识。",
+          "如果另有名称字段，填写自己容易辨认的显示名称。",
+          "保存后重新打开模型菜单，在新测试会话中选择它。"
+        ]
+      },
+      {
+        "type": "p",
+        "text": "下面只给占位符。请替换为当前账号或接口实际支持的准确 Model ID，不要把 YOUR_MODEL_ID 原样保存为模型名称。"
+      },
+      {
+        "type": "code",
+        "lang": "text",
+        "label": "Model ID 示例 · 需先确认服务商支持",
+        "text": "YOUR_MODEL_ID"
+      },
+      {
+        "type": "code",
+        "lang": "text",
+        "label": "显示名称示例",
+        "text": "My Model"
+      },
+      {
+        "type": "h2",
+        "text": "用最小请求验证"
+      },
+      {
+        "type": "code",
+        "lang": "text",
+        "label": "发送给新会话的测试内容",
+        "text": "只回复 OK，不读取或修改文件。"
+      },
+      {
+        "type": "table",
+        "headers": [
+          "结果",
+          "含义"
+        ],
+        "rows": [
+          [
+            "成功回复",
+            "当前配置下模型请求可完成"
+          ],
+          [
+            "model_not_found",
+            "核对准确 ID、接口地址和该接口支持的模型"
+          ],
+          [
+            "权限或认证错误",
+            "核对账号权限、API Key 或服务商配置"
+          ],
+          [
+            "菜单没有添加入口",
+            "先检查 Paseo 版本和当前提供方设置，不能直接套用其他版本的界面"
+          ]
+        ]
+      },
+      {
+        "type": "note",
+        "title": "添加菜单项不会开通模型",
+        "text": "手动添加只让 Paseo 可以选择该 Model ID，不会为账号增加权限，也不会让第三方接口自动支持它。"
+      }
+    ]
+  },
+  {
+    "id": "model-config",
+    "title": "models 与 additionalModels",
+    "group": "模型与服务商",
+    "description": "解释固定模型列表为何会影响自动发现。",
+    "platform": "配置说明",
+    "blocks": [
+      {
+        "type": "p",
+        "text": "模型列表可能同时受到 Codex 的模型发现、Paseo 提供方设置和自定义配置影响。刷新不能绕过一份已经固定下来的列表。"
+      },
+      {
+        "type": "table",
+        "headers": [
+          "配置概念",
+          "作用",
+          "适合场景"
+        ],
+        "rows": [
+          [
+            "自动发现",
+            "由当前提供方和相关 CLI 返回模型信息",
+            "希望随后端能力显示模型"
+          ],
+          [
+            "models",
+            "指定固定的模型列表，覆盖自动发现列表",
+            "有意限制或完全接管显示模型"
+          ],
+          [
+            "additionalModels",
+            "在已有模型来源上补充条目",
+            "保留自动发现，同时加入额外 Model ID"
+          ]
+        ]
+      },
+      {
+        "type": "h2",
+        "text": "刷新无效时的检查顺序"
+      },
+      {
+        "type": "list",
+        "items": [
+          "先确认正在检查的是远程 Linux 主机对应的提供方配置。",
+          "查看是否曾手工设置过 models 固定列表。",
+          "仅想补充模型时，优先使用支持该能力的“添加 Model”入口。",
+          "如需手工编辑，先备份当前配置，并按安装版本的配置文档确认字段位置和结构。",
+          "改动后重新检查 provider models，并发送一次最小模型请求。"
+        ]
+      },
+      {
+        "type": "note",
+        "title": "不直接粘贴配置片段",
+        "text": "字段应放在哪一级、模型对象需要哪些属性，取决于当前配置结构和版本。本页解释两者区别，避免把示意字段直接粘贴到错误的位置。"
+      }
+    ]
+  },
+  {
+    "id": "updates",
+    "title": "版本更新",
+    "group": "维护与排障",
+    "description": "沿用原安装方式更新，并核对真正生效的版本。",
+    "platform": "Linux + Windows",
+    "blocks": [
+      {
+        "type": "h2",
+        "text": "先记录路径与版本"
+      },
+      {
+        "type": "code",
+        "lang": "bash",
+        "label": "Linux · Codex 安装位置",
+        "text": "type -a codex"
+      },
+      {
+        "type": "code",
+        "lang": "bash",
+        "label": "Linux · Paseo 安装位置",
+        "text": "type -a paseo"
+      },
+      {
+        "type": "p",
+        "text": "沿用实际使用的安装来源。npm 全局安装与独立安装脚本可能放在不同目录，更新其中一份不代表 daemon 自动改用它。"
+      },
+      {
+        "type": "h2",
+        "text": "Codex：选择与原安装一致的一种"
+      },
+      {
+        "type": "code",
+        "lang": "bash",
+        "label": "Linux · npm 安装用户的更新命令",
+        "text": "npm install -g @openai/codex@latest"
+      },
+      {
+        "type": "p",
+        "text": "如果原先使用官方安装脚本，则使用该安装器的当前流程；下面是替代路径，不需要与 npm 方式一起执行。"
+      },
+      {
+        "type": "code",
+        "lang": "bash",
+        "label": "Linux · 官方脚本安装用户的替代更新方式",
+        "text": "curl -fsSL https://chatgpt.com/codex/install.sh | sh"
+      },
+      {
+        "type": "h2",
+        "text": "Paseo CLI"
+      },
+      {
+        "type": "code",
+        "lang": "bash",
+        "label": "Linux · 更新 npm 安装的 Paseo",
+        "text": "npm install -g @getpaseo/cli@latest"
+      },
+      {
+        "type": "h2",
+        "text": "CC-Switch CLI"
+      },
+      {
+        "type": "code",
+        "lang": "bash",
+        "label": "Linux · 运行安装器并按提示选择 Update",
+        "text": "curl -fsSL https://github.com/SaladDay/cc-switch-cli/releases/latest/download/install.sh | bash"
+      },
+      {
+        "type": "h2",
+        "text": "更新后确认"
+      },
+      {
+        "type": "code",
+        "lang": "bash",
+        "label": "Linux · Codex 版本",
+        "text": "codex --version"
+      },
+      {
+        "type": "code",
+        "lang": "bash",
+        "label": "Linux · Paseo 版本",
+        "text": "paseo --version"
+      },
+      {
+        "type": "code",
+        "lang": "bash",
+        "label": "Linux · CC-Switch 版本",
+        "text": "cc-switch --version"
+      },
+      {
+        "type": "p",
+        "text": "Windows Paseo Desktop 是另一端的软件，需通过桌面端自己的更新入口或官方发行包更新。服务器 CLI 更新后，按下一篇重新启动 daemon，并再次检查 provider diagnostic。"
+      }
+    ]
+  },
+  {
+    "id": "daemon-control",
+    "title": "daemon 启停与环境刷新",
+    "group": "维护与排障",
+    "description": "区分普通重启和为新 PATH、配置环境启动新进程。",
+    "platform": "Linux",
+    "blocks": [
+      {
+        "type": "h2",
+        "text": "查看、启动、停止"
+      },
+      {
+        "type": "code",
+        "lang": "bash",
+        "label": "Linux · 查看状态",
+        "text": "paseo daemon status"
+      },
+      {
+        "type": "code",
+        "lang": "bash",
+        "label": "Linux · 未运行时启动",
+        "text": "paseo daemon start"
+      },
+      {
+        "type": "code",
+        "lang": "bash",
+        "label": "Linux · 需要停止时执行",
+        "text": "paseo daemon stop"
+      },
+      {
+        "type": "h2",
+        "text": "普通重启"
+      },
+      {
+        "type": "code",
+        "lang": "bash",
+        "label": "Linux · 重启 daemon",
+        "text": "paseo daemon restart"
+      },
+      {
+        "type": "p",
+        "text": "restart 用于常规重启。不要假定它一定会继承刚刚在另一个 shell 中设置的所有环境变量。重启也会让客户端暂时断开，先等正在进行的任务结束。"
+      },
+      {
+        "type": "h2",
+        "text": "PATH 或安装位置改变时"
+      },
+      {
+        "type": "p",
+        "text": "在准备启动 daemon 的同一个终端中确认命令路径，再停止旧进程并重新启动。"
+      },
+      {
+        "type": "code",
+        "lang": "bash",
+        "label": "Linux · 准备当前 shell 的 PATH",
+        "text": "export PATH=\"$HOME/.local/bin:$PATH\""
+      },
+      {
+        "type": "code",
+        "lang": "bash",
+        "label": "Linux · 确认 Codex 路径",
+        "text": "command -v codex"
+      },
+      {
+        "type": "code",
+        "lang": "bash",
+        "label": "Linux · 停止旧 daemon",
+        "text": "paseo daemon stop"
+      },
+      {
+        "type": "code",
+        "lang": "bash",
+        "label": "Linux · 从当前环境启动",
+        "text": "paseo daemon start"
+      },
+      {
+        "type": "code",
+        "lang": "bash",
+        "label": "Linux · 检查真正使用的环境",
+        "text": "paseo provider diagnostic codex"
+      },
+      {
+        "type": "note",
+        "title": "如果使用系统服务管理",
+        "text": "如果 daemon 是由 systemd 等服务管理器拉起，进程环境可能来自服务定义，而不是当前终端。此时应检查实际服务配置和启动方式，以 diagnostic 结果为准。"
+      }
+    ]
+  },
+  {
+    "id": "daily",
+    "title": "日常命令速查",
+    "group": "维护与排障",
+    "description": "已经配置好后，按目的找一条需要的命令。",
+    "platform": "Linux + Windows",
+    "blocks": [
+      {
+        "type": "p",
+        "text": "这里是命令索引，不是一组必须顺序执行的安装步骤。根据目的使用一条即可。"
+      },
+      {
+        "type": "code",
+        "lang": "bash",
+        "label": "Linux · 确认 Paseo 在线",
+        "text": "paseo daemon status"
+      },
+      {
+        "type": "code",
+        "lang": "bash",
+        "label": "Linux · daemon 未运行时启动",
+        "text": "paseo daemon start"
+      },
+      {
+        "type": "code",
+        "lang": "bash",
+        "label": "Linux · 检查 Codex 版本",
+        "text": "codex --version"
+      },
+      {
+        "type": "code",
+        "lang": "bash",
+        "label": "Linux · 检查 Codex 登录状态",
+        "text": "codex login status"
+      },
+      {
+        "type": "code",
+        "lang": "bash",
+        "label": "Linux · 检查 Paseo 的 Codex 环境",
+        "text": "paseo provider diagnostic codex"
+      },
+      {
+        "type": "code",
+        "lang": "bash",
+        "label": "Linux · 查看模型列表",
+        "text": "paseo provider models codex"
+      },
+      {
+        "type": "code",
+        "lang": "bash",
+        "label": "Linux · 打开 CC-Switch",
+        "text": "cc-switch"
+      },
+      {
+        "type": "code",
+        "lang": "bash",
+        "label": "Linux · 查看 Codex 服务商",
+        "text": "cc-switch --app codex provider list"
+      },
+      {
+        "type": "code",
+        "lang": "bash",
+        "label": "Linux · 显示手机配对二维码",
+        "text": "paseo daemon pair"
+      },
+      {
+        "type": "code",
+        "lang": "powershell",
+        "label": "Windows PowerShell · 测试无交互 SSH",
+        "text": "ssh -o BatchMode=yes root@YOUR_SERVER_IP \"echo ok\""
+      },
+      {
+        "type": "code",
+        "lang": "text",
+        "label": "Paseo · SSH 地址示例，先替换占位符",
+        "text": "ssh://root@YOUR_SERVER_IP"
+      },
+      {
+        "type": "code",
+        "lang": "text",
+        "label": "Paseo · 示例 Linux 项目路径",
+        "text": "/root/my-project"
+      }
+    ]
+  },
+  {
+    "id": "troubleshooting",
+    "title": "常见错误与处理顺序",
+    "group": "维护与排障",
+    "description": "按报错定位到具体环节，避免重复重装。",
+    "platform": "排障索引",
+    "blocks": [
+      {
+        "type": "table",
+        "headers": [
+          "现象 / 报错",
+          "优先检查",
+          "对应文章"
+        ],
+        "rows": [
+          [
+            "cc-switch / codex / paseo: command not found",
+            "安装位置和当前用户 PATH",
+            "命令目录与 PATH"
+          ],
+          [
+            "Set-Service 拒绝访问",
+            "PowerShell 是否有管理员权限",
+            "启动 Windows SSH Agent"
+          ],
+          [
+            "Error connecting to agent",
+            "ssh-agent 是否运行、ssh-add 所属环境",
+            "启动 Windows SSH Agent"
+          ],
+          [
+            "Identity added 后仍 Permission denied",
+            "远端是否开启公钥、密钥是否匹配、权限和 Match 规则",
+            "开启 Linux 公钥认证"
+          ],
+          [
+            "pubkeyauthentication no",
+            "找到来源配置并正确开启",
+            "开启 Linux 公钥认证"
+          ],
+          [
+            "Windows SSH 输出 ok，Paseo 仍连接失败",
+            "daemon 是否在线、地址和端口是否正确",
+            "Paseo Desktop 连接"
+          ],
+          [
+            "Choose a project",
+            "远程主机下是否已添加并选中目录",
+            "添加 Linux 项目"
+          ],
+          [
+            "终端 Codex 正常，Paseo 找不到",
+            "daemon 的 PATH 与实际二进制路径",
+            "daemon 启停与环境刷新"
+          ],
+          [
+            "模型缺少，点击刷新无效",
+            "四条诊断命令和 models 固定列表",
+            "模型缺少，刷新不出来"
+          ],
+          [
+            "模型出现但 model_not_found",
+            "准确模型 ID、实际服务商和权限",
+            "手动添加模型"
+          ],
+          [
+            "二维码配对失败",
+            "daemon、Relay 提示和手机所选主机",
+            "手机二维码与 Relay"
+          ]
+        ]
+      },
+      {
+        "type": "h2",
+        "text": "连接失败的详细证据"
+      },
+      {
+        "type": "p",
+        "text": "需要继续检查 SSH 时，可以在 Windows 获取详细日志。该命令仍使用无交互模式，不会要求输入服务器密码。"
+      },
+      {
+        "type": "code",
+        "lang": "powershell",
+        "label": "Windows PowerShell · 详细 SSH 调试",
+        "text": "ssh -vvv -o BatchMode=yes root@YOUR_SERVER_IP \"echo ok\""
+      },
+      {
+        "type": "p",
+        "text": "重点看是否提供了预期密钥、服务器是否接受，以及拒绝后的认证方式。日志可能包含主机、用户名和路径，分享时只保留相关部分。"
+      },
+      {
+        "type": "h2",
+        "text": "需要求助时带上哪些信息"
+      },
+      {
+        "type": "list",
+        "items": [
+          "执行位置：Linux 服务器、Windows 普通 PowerShell，还是管理员 PowerShell。",
+          "执行的完整命令与紧接着的报错文字。",
+          "相关软件版本、实际命令路径和当前选中的远程主机。",
+          "模型问题补充准确 Model ID、官方登录或第三方接口类型。",
+          "不附带密码、私钥、API Key、auth.json 内容或完整配对链接。"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "references",
+    "title": "下载地址与参考资料",
+    "group": "维护与排障",
+    "description": "集中保存安装来源与文档入口，便于日后核对版本。",
+    "platform": "资料索引",
+    "blocks": [
+      {
+        "type": "p",
+        "text": "安装入口在 2026-10-20 按 OpenAI 官方 CLI 文档、Paseo 官方文档及 CC-Switch 项目 README 核对。其他配置和界面可能随版本变化，使用时仍需确认当前 --help 与官方说明。"
+      },
+      {
+        "type": "table",
+        "headers": [
+          "项目 / 主题",
+          "地址"
+        ],
+        "rows": [
+          [
+            "Codex CLI 官方文档",
+            "https://learn.chatgpt.com/docs/codex/cli"
+          ],
+          [
+            "Codex 认证文档",
+            "https://developers.openai.com/codex/auth/"
+          ],
+          [
+            "Codex 安装脚本",
+            "https://chatgpt.com/codex/install.sh"
+          ],
+          [
+            "CC-Switch CLI 项目",
+            "https://github.com/SaladDay/cc-switch-cli"
+          ],
+          [
+            "CC-Switch CLI 发布版本",
+            "https://github.com/SaladDay/cc-switch-cli/releases"
+          ],
+          [
+            "CC-Switch CLI 安装脚本",
+            "https://github.com/SaladDay/cc-switch-cli/releases/latest/download/install.sh"
+          ],
+          [
+            "Paseo 安装说明",
+            "https://paseo.sh/docs"
+          ],
+          [
+            "Paseo CLI 命令",
+            "https://paseo.sh/docs/cli"
+          ],
+          [
+            "Paseo 连接说明",
+            "https://paseo.sh/docs/connectivity"
+          ],
+          [
+            "Paseo Codex 配置",
+            "https://paseo.sh/docs/codex"
+          ],
+          [
+            "Paseo 自定义提供方与模型",
+            "https://paseo.sh/docs/custom-providers"
+          ],
+          [
+            "Node.js 下载与安装",
+            "https://nodejs.org/en/download"
+          ]
+        ]
+      },
+      {
+        "type": "h2",
+        "text": "以后如何维护这份手册"
+      },
+      {
+        "type": "list",
+        "items": [
+          "公开仓库始终使用占位符。个人服务器地址、账号和项目位置请保存在不上传的私人记录中。",
+          "更新软件后，记录 codex --version、paseo --version、cc-switch --version。",
+          "更换接口后，重新验证当前提供方和需要使用的 Model ID。",
+          "功能入口或命令变化时，先看该版本 --help，再更新对应文章。",
+          "修改 src/guide-content.json 后执行 npm run build，再执行 npm run check；不要只修改生成的 Markdown 或 HTML。"
+        ]
+      }
+    ]
+  }
+]

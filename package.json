@@ -1,0 +1,11 @@
+{
+  "name": "paseo-linux-guide",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Categorized Chinese Linux, Codex, CC-Switch and Paseo guide",
+  "scripts": {
+    "build": "node scripts/build.cjs",
+    "check": "node scripts/check.cjs"
+  },
+  "engines": { "node": ">=18" }
+}
