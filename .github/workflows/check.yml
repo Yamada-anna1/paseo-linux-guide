@@ -16,8 +16,51 @@ jobs:
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: '24'
-      - run: bash -n install.sh scripts/test-installer.sh scripts/smoke-installer-ci.sh
+      - run: |
+          for file in install.sh scripts/test-installer.sh scripts/smoke-installer-ci.sh; do
+            bash -n "$file" || exit 1
+          done
       - run: bash scripts/test-installer.sh
+      - name: Verify piped menu in a real Linux terminal
+        run: |
+          python3 - <<'PY'
+          import errno, os, pty, select, signal, time
+          child, terminal = pty.fork()
+          if child == 0:
+              os.execv('/bin/bash', ['bash', '-c', 'cat install.sh | bash'])
+          captured = bytearray()
+          sent = False
+          ended = False
+          deadline = time.monotonic() + 30
+          try:
+              while time.monotonic() < deadline:
+                  ready, _, _ = select.select([terminal], [], [], 0.5)
+                  if not ready:
+                      continue
+                  try:
+                      data = os.read(terminal, 65536)
+                  except OSError as error:
+                      if error.errno == errno.EIO:
+                          ended = True
+                          break
+                      raise
+                  if not data:
+                      ended = True
+                      break
+                  captured.extend(data)
+                  if not sent and '输入选项编号并回车'.encode() in captured:
+                      os.write(terminal, b'0\n')
+                      sent = True
+              if not ended:
+                  os.killpg(child, signal.SIGTERM)
+              _, status = os.waitpid(child, 0)
+              assert ended and sent, 'Piped menu did not accept terminal input'
+              assert os.waitstatus_to_exitcode(status) == 0, 'Menu exited unsuccessfully'
+              assert '已退出'.encode() in captured, 'Exit option was not handled'
+              print('Real Linux PTY: piped menu accepts selection and exits cleanly.')
+          finally:
+              os.close(terminal)
+          PY
       - run: npm run build && npm run check && git diff --exit-code
   linux-install:
     needs: checks

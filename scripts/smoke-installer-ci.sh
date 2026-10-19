@@ -25,6 +25,13 @@ codex --version || exit 1
 cc-switch --version || exit 1
 paseo --version || exit 1
 guide_install_all || exit 1
+paseo daemon start --help > "$GUIDE_TMP_DIR/daemon-help.txt" || exit 1
+paseo daemon status --help > "$GUIDE_TMP_DIR/status-help.txt" || exit 1
+paseo daemon pair --help > "$GUIDE_TMP_DIR/pair-help.txt" || exit 1
+grep -q -- '--relay' "$GUIDE_TMP_DIR/pair-help.txt" || {
+  printf 'Published Paseo CLI lacks the required --relay option.\n' >&2
+  exit 1
+}
 
 # No provider login, model calls, pairing QR codes or persistent daemon are created.
-printf '\nReal Linux install + missing-npm recovery + repeat-install checks passed.\n'
+printf '\nReal Linux install + missing-npm recovery + repeat-install + daemon/pair command checks passed.\n'
