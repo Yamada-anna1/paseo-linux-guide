@@ -28,17 +28,23 @@ Test-Path "$env:USERPROFILE\.ssh\id_ed25519"
 Test-Path "$env:USERPROFILE\.ssh\id_ed25519.pub"
 ```
 
-如果两条都返回 True，通常可以直接使用已有密钥，跳到 SSH Agent。不要重复生成或覆盖正在使用的密钥。
+如果两条都返回 True，通常可以直接使用已有密钥，跳到 SSH Agent；若只有一条 True，也先停止生成并核对原密钥。不要重复生成或覆盖正在使用的密钥。完整 Windows 命令和报错判断集中在 [SSH 排查与配置指引](ssh-troubleshooting.md)。
 
 ## 3. 仅在没有密钥时生成
 
 **Windows PowerShell · 生成 ED25519 密钥**
 
 ```powershell
-ssh-keygen -t ed25519
+# 只在默认私钥和公钥均不存在时生成，避免覆盖已有登录凭据。
+if ((Test-Path "$env:USERPROFILE\.ssh\id_ed25519") -or (Test-Path "$env:USERPROFILE\.ssh\id_ed25519.pub")) {
+    Write-Warning '已有私钥或公钥；未生成新密钥，请先核对现有文件。'
+} else {
+    New-Item -ItemType Directory -Path "$env:USERPROFILE\.ssh" -Force | Out-Null
+    ssh-keygen -t ed25519 -f "$env:USERPROFILE\.ssh\id_ed25519"
+}
 ```
 
-- 保存路径提示可按 Enter 使用默认路径。
+- 命令已指定默认文件路径；只在对应私钥和公钥均不存在时运行生成。
 - 如果提示文件已存在，不要覆盖已有密钥；取消并先检查它的用途。
 - 可以设置密钥口令，之后通过 ssh-agent 解锁，让 Paseo 无需交互输入口令。
 - id_ed25519 是私钥，留在 Windows；id_ed25519.pub 是公钥，安装到 Linux。
@@ -49,4 +55,4 @@ ssh-keygen -t ed25519
 
 ---
 
-[返回首页](../../README.md) · [本分类目录](README.md) · [上一篇：安装 Paseo 与启动 daemon](../02-installation/paseo-install.md) · [下一篇：启动 Windows SSH Agent](ssh-agent.md)
+[返回首页](../../README.md) · [本分类目录](README.md) · [上一篇：SSH 排查与配置指引](ssh-troubleshooting.md) · [下一篇：启动 Windows SSH Agent](ssh-agent.md)

@@ -2,7 +2,7 @@
 # Interactive Linux installer. Read menu input from a terminal, never from a curl pipe.
 # Upstream scripts are downloaded completely before execution; no keys are collected.
 
-GUIDE_INSTALLER_VERSION='1.2.0'
+GUIDE_INSTALLER_VERSION='1.3.0'
 GUIDE_CODEX_URL='https://chatgpt.com/codex/install.sh'
 GUIDE_CC_URL='https://github.com/SaladDay/cc-switch-cli/releases/latest/download/install.sh'
 GUIDE_NVM_URL='https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.8/install.sh'
@@ -376,6 +376,280 @@ guide_refresh_paseo_environment() {
   guide_info '请回到 Paseo 重新打开 Clone from GitHub。若仍报错，确认连接主机、Linux 用户和服务管理器环境。'
 }
 
+guide_ssh_diagnostics() {
+  local guide_sshd='' guide_ssh_config='' guide_ssh_file
+  guide_info 'Linux SSH 只读检查：不安装、不 sudo、不读取私钥、不修改配置或权限。'
+  printf '当前用户：%s\n主目录：%s\n' "$(id -un)" "$HOME"
+  printf '%s\n' '必须与 Windows 想登录的 Linux 用户一致；本检查不是远程登录成功证明。'
+  if guide_has sshd; then guide_sshd="$(command -v sshd)"
+  elif [[ -x /usr/sbin/sshd ]]; then guide_sshd=/usr/sbin/sshd; fi
+  printf '\n[sshd 基础配置]\n'
+  if [[ "$(id -u)" != 0 ]]; then
+    printf '%s\n' '当前不是 root，不自动提权；请管理员检查 sshd -T 输出。'
+  elif [[ -z "$guide_sshd" ]]; then
+    printf '%s\n' '找不到 sshd；未自动安装。请核对 SSH 服务及实际运行环境。'
+  elif guide_ssh_config="$("$guide_sshd" -T 2>&1)"; then
+    printf '%s\n' "$guide_ssh_config" | grep -E '^(pubkeyauthentication|permitrootlogin|authorizedkeysfile|authenticationmethods|strictmodes) ' || true
+  else
+    printf '%s\n' 'sshd -T 检查失败；请管理员在终端查看具体错误，未修改配置。'
+  fi
+  printf '%s\n' '注意：Match 规则要结合 sshd -T -C 检查；运行服务的自定义 -f/-o 参数也可能改变结果。'
+  printf '%s\n' '下方仅检查当前用户的常用 authorized_keys 路径；自定义路径应按上方配置另查。'
+  printf '\n[目录权限与属主]\n'
+  if guide_has stat; then
+    for guide_ssh_file in "$HOME" "$HOME/.ssh" "$HOME/.ssh/authorized_keys"; do
+      if [[ -e "$guide_ssh_file" || -L "$guide_ssh_file" ]]; then
+        stat -c '%a %U:%G %n' -- "$guide_ssh_file" || true
+      else printf '不存在：%s\n' "$guide_ssh_file"; fi
+    done
+  else printf '%s\n' '缺少 stat，跳过权限检查。'; fi
+  printf '\n[已授权登录公钥指纹]\n'
+  if ! guide_has ssh-keygen; then
+    printf '%s\n' '缺少 ssh-keygen，跳过公钥指纹检查。'
+  elif [[ -L "$HOME" || -L "$HOME/.ssh" || -L "$HOME/.ssh/authorized_keys" ]]; then
+    printf '%s\n' '主目录、.ssh 或 authorized_keys 是符号链接；请管理员核对目标，本检查不继续跟随。'
+  elif [[ -f "$HOME/.ssh/authorized_keys" ]]; then
+    ssh-keygen -lf "$HOME/.ssh/authorized_keys" </dev/null || printf '%s\n' '未识别出有效公钥：可能为空、格式不符或无法读取；不要直接清空文件。'
+  else printf '%s\n' '常用 authorized_keys 文件不存在；请结合实际 AuthorizedKeysFile 配置判断。'; fi
+  printf '\n[服务器主机公钥指纹，与登录公钥不同]\n'
+  for guide_ssh_file in /etc/ssh/ssh_host_ed25519_key.pub /etc/ssh/ssh_host_ecdsa_key.pub /etc/ssh/ssh_host_rsa_key.pub; do
+    if guide_has ssh-keygen && [[ -f "$guide_ssh_file" && ! -L "$guide_ssh_file" ]]; then
+      ssh-keygen -lf "$guide_ssh_file" </dev/null || true
+    fi
+  done
+  printf '%s\n' '主机指纹必须从你已信任的会话或服务商控制台取得；不能把本输出当作自动信任授权。'
+  guide_ok '只读检查结束。需要修复时先看子菜单 2–5；当前没有进行修改。'
+}
+
+guide_ssh_host_steps() {
+  cat <<'GUIDE_SSH_HOST'
+
+【步骤 1 · Linux / 已信任的 FinalShell 会话或服务商控制台】
+用途：查看服务器 ED25519 主机公钥指纹。只读；无权读取时请管理员协助。
+# Linux Bash：不是 Windows，也不是私钥文件
+ssh-keygen -lf /etc/ssh/ssh_host_ed25519_key.pub
+
+【步骤 2 · Windows PowerShell / 普通窗口】
+先替换 YOUR_LINUX_USER 与 YOUR_SERVER_IP；非 22 端口也要修改。
+# Windows：首次连接；可能询问主机信任或服务器密码
+ssh -p 22 YOUR_LINUX_USER@YOUR_SERVER_IP "echo SSH_OK"
+
+看到 yes/no/[fingerprint] 时，先比较相同算法的 SHA256 指纹。
+只有与步骤 1 一致才输入 yes。信任记录写入 Windows 用户的 known_hosts。
+指纹不一致或提示 REMOTE HOST IDENTIFICATION HAS CHANGED：停止核实，
+不要关闭主机校验，不要盲目删除旧记录，不要自动接受扫描到的密钥。
+
+FinalShell 能连接，不代表 Windows OpenSSH 已信任同一主机。
+Linux 菜单不能替 Windows 确认信任。不要在 Linux 里运行上述 Windows 测试。
+SSH_OK 若依赖密码得到，尚不证明无交互密钥登录可用；继续看子菜单 5。
+GUIDE_SSH_HOST
+}
+
+guide_ssh_windows_steps() {
+  cat <<'GUIDE_SSH_WINDOWS'
+
+【Windows PowerShell 命令速查：每段分别复制，不在 Linux 执行】
+以下仅展示，不会由 Linux 安装器执行。先确认使用运行 Codex 的同一 Windows 用户。
+
+【1 · 普通窗口 / 只读：当前用户、SSH 命令】
+whoami
+Get-Command ssh
+
+【2 · 普通窗口 / 只读：检查已有密钥，只检查文件是否存在】
+Test-Path "$env:USERPROFILE\.ssh\id_ed25519"
+Test-Path "$env:USERPROFILE\.ssh\id_ed25519.pub"
+任意一个存在：不要覆盖或盲目重新生成。
+
+【3 · 仅两个文件都不存在时 / 普通窗口 / 会创建新密钥】
+# 整段复制；已有任意一个文件则只提示，不覆盖
+if ((Test-Path "$env:USERPROFILE\.ssh\id_ed25519") -or (Test-Path "$env:USERPROFILE\.ssh\id_ed25519.pub")) {
+    Write-Host '已有密钥文件，停止生成，请使用或检查现有密钥。'
+} else {
+    New-Item -ItemType Directory -Force "$env:USERPROFILE\.ssh" | Out-Null
+    ssh-keygen -t ed25519 -f "$env:USERPROFILE\.ssh\id_ed25519"
+}
+如设置私钥口令，请妥善保存；后续用 ssh-agent 解锁。不要把私钥上传到服务器。
+
+【4 · 普通窗口 / 只读：查看服务与已加载密钥】
+Get-Service ssh-agent
+ssh-add -l
+没有身份、服务未启动和公钥被服务器拒绝是不同问题。
+
+【5 · 仅服务未启用时 / 管理员 PowerShell / 会修改服务设置】
+# 两条分别执行；已经 Running 时不必重复
+Set-Service -Name ssh-agent -StartupType Automatic
+Start-Service ssh-agent
+
+【6 · 普通窗口 / 会将已有私钥加载到本机 agent】
+ssh-add "$env:USERPROFILE\.ssh\id_ed25519"
+成功通常显示 Identity added；需要口令时在自己终端输入，不要分享。
+
+【7 · 普通窗口 / 只读：核对本机登录公钥指纹】
+ssh-keygen -lf "$env:USERPROFILE\.ssh\id_ed25519.pub"
+该指纹应与 Linux authorized_keys 中某把钥匙一致；不是服务器主机指纹。
+
+【8 · 普通窗口 / 只读：显示可上传的公钥；必须保留 .pub 后缀】
+Get-Content "$env:USERPROFILE\.ssh\id_ed25519.pub"
+
+【9 · 可选 / 会替换 Windows 剪贴板内容，仅复制公钥】
+Get-Content "$env:USERPROFILE\.ssh\id_ed25519.pub" -Raw | Set-Clipboard
+不要读取、复制或发送没有 .pub 后缀的 id_ed25519 内容。
+
+【10 · 公钥文件传送 / 会在服务器主目录写入 incoming-key.pub】
+推荐在已信任的 FinalShell 文件面板上传 id_ed25519.pub，改名 incoming-key.pub。
+上传到目标 Linux 用户的主目录，先确认该目标文件不存在或可替换。
+如果普通 SSH 已能认证，也可在 Windows PowerShell 使用下面命令；先替换占位符：
+scp -P 22 "$env:USERPROFILE\.ssh\id_ed25519.pub" YOUR_LINUX_USER@YOUR_SERVER_IP:incoming-key.pub
+若 scp 也因认证失败，不要循环重试；使用已有 FinalShell 会话上传 .pub。
+上传仅是准备候选文件，尚未添加授权；继续看子菜单 4。
+GUIDE_SSH_WINDOWS
+}
+
+guide_ssh_append_example() {
+  # Printed Bash example only. Nothing here executes unless the user separately copies it.
+  cat <<'GUIDE_SSH_APPEND_EXAMPLE'
+(
+  set -eu
+  # Linux Bash：当前用户必须就是准备通过 SSH 登录的目标用户。
+  ssh_target_home="$HOME"
+  ssh_fail() { printf '[停止] %s\n' "$*" >&2; exit 1; }
+  [[ "$ssh_target_home" == /* && -d "$ssh_target_home" && ! -L "$ssh_target_home" ]] || ssh_fail '主目录必须是实际的绝对目录。'
+  ssh_target_home="$(cd -P -- "$ssh_target_home" && pwd -P)"
+  [[ "$ssh_target_home" != / ]] || ssh_fail '拒绝把根目录作为用户主目录。'
+  ssh_candidate="$ssh_target_home/incoming-key.pub"
+  ssh_dir="$ssh_target_home/.ssh"
+  ssh_authorized="$ssh_dir/authorized_keys"
+  [[ -f "$ssh_candidate" && ! -L "$ssh_candidate" ]] || ssh_fail '候选 .pub 文件不存在或是符号链接。'
+  [[ "$(wc -c < "$ssh_candidate")" -le 16384 ]] || ssh_fail '候选文件过大，不应是密钥集合或私钥。'
+  # 接受 Windows CRLF；整个文件只允许一行、无控制字符的 OpenSSH 公钥。
+  ssh_pubkey="$(LC_ALL=C awk '{ sub(/\r$/, ""); if (NR != 1 || $0 ~ /[[:cntrl:]]/) bad=1; line=$0 } END { if (NR != 1 || bad) exit 1; print line }' "$ssh_candidate")" || ssh_fail '只接受单行公钥文件。'
+  IFS=' ' read -r ssh_type ssh_blob ssh_comment <<< "$ssh_pubkey"
+  case "$ssh_type" in ssh-ed25519|ssh-rsa|ecdsa-sha2-nistp256|ecdsa-sha2-nistp384|ecdsa-sha2-nistp521|sk-ssh-ed25519@openssh.com|sk-ecdsa-sha2-nistp256@openssh.com) ;; *) ssh_fail '不是支持的 OpenSSH 公钥；不要上传私钥或占位文本。' ;; esac
+  [[ "$ssh_blob" =~ ^[A-Za-z0-9+/]+={0,3}$ ]] || ssh_fail '公钥内容格式不正确。'
+  ssh-keygen -lf "$ssh_candidate" || ssh_fail '公钥验证失败。'
+  # 拒绝异常目标，保留已有文件与权限；不自动更改 sshd 配置。
+  [[ -d "$ssh_target_home" && -O "$ssh_target_home" ]] || ssh_fail '主目录属主不匹配。'
+  [[ ! -L "$ssh_dir" && ( ! -e "$ssh_dir" || -d "$ssh_dir" ) ]] || ssh_fail '.ssh 目标异常。'
+  [[ ! -L "$ssh_authorized" && ( ! -e "$ssh_authorized" || -f "$ssh_authorized" ) ]] || ssh_fail 'authorized_keys 目标异常。'
+  for ssh_path in "$ssh_target_home" "$ssh_dir" "$ssh_authorized"; do
+    if [[ -e "$ssh_path" ]]; then
+      [[ -O "$ssh_path" ]] || ssh_fail "属主不匹配：$ssh_path"
+      ssh_mode="$(stat -c %a -- "$ssh_path")"
+      (( (8#$ssh_mode & 0022) == 0 )) || ssh_fail "组或其他用户可写，请先核查权限：$ssh_path"
+    fi
+  done
+  # 相同密钥即使有不同注释或 from=/command= 限制，也不再添加无限制副本。
+  if [[ -f "$ssh_authorized" ]]; then
+    if grep -Fq -- "$ssh_blob" "$ssh_authorized"; then
+      printf '%s\n' '文件已包含该密钥本体；没有重复追加，请检查原条目的限制选项。'
+      exit 0
+    else
+      ssh_search_status=$?
+      [[ "$ssh_search_status" == 1 ]] || ssh_fail '无法检查原授权文件，未追加。'
+    fi
+  fi
+  umask 077
+  mkdir -p -m 700 -- "$ssh_dir"
+  if [[ -f "$ssh_authorized" ]]; then
+    ssh_backup="$(mktemp "$ssh_authorized.bak.XXXXXXXX")"
+    cp -p -- "$ssh_authorized" "$ssh_backup" || ssh_fail '备份失败，未追加。'
+    printf '原文件已备份：%s\n' "$ssh_backup"
+  fi
+  # 前置换行避免与旧文件最后一行粘连；>> 仅追加，不覆盖。
+  printf '\n%s\n' "$ssh_pubkey" >> "$ssh_authorized"
+  printf '%s\n' '已追加公钥；仅添加授权公钥无需重启 sshd。请保留当前会话并在 Windows 测试。'
+  ssh-keygen -lf "$ssh_authorized"
+)
+GUIDE_SSH_APPEND_EXAMPLE
+}
+
+guide_ssh_append_steps() {
+  cat <<'GUIDE_SSH_APPEND'
+
+【Linux / FinalShell：公钥认证排查与安全追加指引】
+这里仅显示步骤，不执行追加。不是让你重装工具、放开 root 密码登录或重启 Paseo。
+请先保留当前能用的 FinalShell 会话，确认当前 Linux 用户就是目标登录用户。
+
+【1 · Linux / 只读：账号、授权文件与权限】
+id -un
+ssh-keygen -lf "$HOME/.ssh/authorized_keys"
+stat -c '%a %U:%G %n' "$HOME" "$HOME/.ssh" "$HOME/.ssh/authorized_keys"
+出现 is not a public key file 只说明没有识别出有效公钥，可能为空或格式不符。
+公钥指纹应与 Windows 的 id_ed25519.pub 一致；不要比较两边文件注释。
+管理员可检查（普通用户不要为照抄示例切换成 root）：
+sshd -T | grep -E '^(pubkeyauthentication|permitrootlogin|authorizedkeysfile|authenticationmethods|strictmodes) '
+如有 Match、自定义 -f/-o 或非默认 AuthorizedKeysFile，请先核对实际配置。
+下方追加例子仅用于当前用户的默认 ~/.ssh/authorized_keys。
+
+【2 · 准备候选公钥】
+按子菜单 3，仅将 Windows 的 .pub 文件上传到目标 Linux 用户主目录，命名 incoming-key.pub。
+先确认这把公钥属于你打算授权的电脑；文件必须只有一行，不要上传私钥。
+上传后先运行这条只读命令，与 Windows .pub 的 SHA256 指纹核对一致再继续：
+ssh-keygen -lf "$HOME/incoming-key.pub"
+
+【3 · Linux Bash / 会修改授权文件：需要时才复制下面完整括号块】
+整块不能拆开执行：验证通过后先备份再追加；检测到同一密钥则保留原条目。
+整块执行过程中不会暂停等待你核对指纹，必须先完成上一步核对。
+如果检查不通过就停止，请先处理报错，不要删掉保护检查或清空原文件。
+GUIDE_SSH_APPEND
+  guide_ssh_append_example
+  printf '\n%s\n' '完成后转到 Windows 子菜单 5 测试。备份和候选文件留在服务器，不自动删除。'
+}
+
+guide_ssh_test_steps() {
+  cat <<'GUIDE_SSH_TEST'
+
+【Windows PowerShell / 普通窗口：无交互连接测试】
+先替换 YOUR_LINUX_USER / YOUR_SERVER_IP；使用正确 SSH 端口。
+# 只执行远程 echo；不询问密码，用来验证密钥/agent 认证
+ssh -o BatchMode=yes -p 22 YOUR_LINUX_USER@YOUR_SERVER_IP "echo SSH_OK"
+
+【可选：明确指定已存在的 Windows 私钥文件，不是 .pub】
+ssh -o BatchMode=yes -o IdentitiesOnly=yes -i "$env:USERPROFILE\.ssh\id_ed25519" -p 22 YOUR_LINUX_USER@YOUR_SERVER_IP "echo SSH_OK"
+若私钥有口令，先用子菜单 3 的 ssh-add 在本机 agent 中解锁。
+IdentityFile 是 Windows 上的私钥路径，不是 Linux 项目目录，也不是公钥文件。
+
+【仍失败时 / 只读诊断：输出分享前遮盖主机、账号和路径】
+ssh -vv -o BatchMode=yes -p 22 YOUR_LINUX_USER@YOUR_SERVER_IP "echo SSH_OK"
+
+结果判断：
+  SSH_OK：回到 Codex 设置 → 连接，点击目标主机的“重新连接”。
+  Host key verification failed：回子菜单 2，先核对服务器主机指纹。
+  Permission denied：看是否 Offering public key、agent 是否有钥匙，再查 Linux 授权公钥与规则。
+  Connection refused / timeout：核对地址、SSH 端口及网络；不要用重装 gh 代替检查。
+
+SSH 连接、GitHub gh 登录、Paseo daemon 的 PATH 是三个不同环节。
+Paseo 手机端找不到 gh：用主菜单 10/11/12；旧 daemon 按需确认后选 13。
+终端 SSH_OK 后 Codex 仍失败：查看应用具体错误与远端登录 shell 的 PATH，不盲目重装。
+GUIDE_SSH_TEST
+}
+
+guide_ssh_menu() {
+  local guide_ssh_result
+  while true; do
+    printf '\n%s\n' '========== SSH 排查与配置指引 ==========' \
+      '所有选项只读检查或展示步骤；不会自动修改 SSH、信任记录、密钥或防火墙。' \
+      '  1) Linux SSH 只读检查（配置、权限、公钥指纹）' \
+      '  2) Windows 首次连接与主机指纹确认指引' \
+      '  3) Windows PowerShell 密钥 / ssh-agent / 公钥传送速查' \
+      '  4) Linux 公钥排查与备份追加指引（仅展示）' \
+      '  5) Windows 无交互测试与应用重连指引' \
+      '  0) 返回安装主菜单'
+    guide_read '输入 SSH 子菜单编号并回车：' || return 0
+    guide_ssh_result=0
+    case "$GUIDE_REPLY" in
+      1) guide_ssh_diagnostics || guide_ssh_result=$? ;;
+      2) guide_ssh_host_steps || guide_ssh_result=$? ;;
+      3) guide_ssh_windows_steps || guide_ssh_result=$? ;;
+      4) guide_ssh_append_steps || guide_ssh_result=$? ;;
+      5) guide_ssh_test_steps || guide_ssh_result=$? ;;
+      0|q|Q) return 0 ;;
+      *) printf '选项无效，请输入 SSH 子菜单中的编号。\n'; continue ;;
+    esac
+    if ((guide_ssh_result != 0)); then guide_error '当前检查或输出失败；未自动进行修复。'; fi
+  done
+}
+
 guide_menu() {
   local guide_result
   while true; do
@@ -394,6 +668,7 @@ guide_menu() {
       ' 11) 登录 GitHub（浏览器设备码授权）' \
       ' 12) 检查 GitHub CLI 和登录状态（只读）' \
       ' 13) 刷新 Paseo 环境（停止后启动，需确认）' \
+      ' 14) SSH 排查与配置指引（只读检查 / 分步操作）' \
       '  0) 退出'
     guide_read '输入选项编号并回车：' || break
     guide_result=0
@@ -411,6 +686,7 @@ guide_menu() {
       11) guide_login_github || guide_result=$? ;;
       12) guide_github_status || guide_result=$? ;;
       13) guide_refresh_paseo_environment || guide_result=$? ;;
+      14) guide_ssh_menu || guide_result=$? ;;
       0|q|Q) break ;;
       *) printf '选项无效，请输入菜单中的编号。\n'; continue ;;
     esac

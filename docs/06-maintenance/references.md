@@ -15,6 +15,11 @@
 | GitHub CLI 固定发布与校验文件 | https://github.com/cli/cli/releases/tag/v2.102.0 |
 | GitHub CLI 浏览器登录 | https://cli.github.com/manual/gh_auth_login |
 | GitHub CLI 登录检查 | https://cli.github.com/manual/gh_auth_status |
+| OpenSSH 客户端 / 主机信任 / 无交互参数 | https://man.openbsd.org/ssh.1 |
+| OpenSSH 服务端 / authorized_keys 格式 | https://man.openbsd.org/sshd.8 |
+| OpenSSH 公钥指纹 | https://man.openbsd.org/ssh-keygen.1 |
+| OpenSSH 认证规则与 Match | https://man.openbsd.org/sshd_config.5 |
+| Windows OpenSSH 密钥与 ssh-agent | https://learn.microsoft.com/en-us/windows-server/administration/openssh/openssh_keymanagement |
 | Codex 认证文档 | https://developers.openai.com/codex/auth/ |
 | Codex 安装脚本 | https://chatgpt.com/codex/install.sh |
 | CC-Switch CLI 项目 | https://github.com/SaladDay/cc-switch-cli |

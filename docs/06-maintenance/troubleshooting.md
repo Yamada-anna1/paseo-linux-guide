@@ -10,9 +10,11 @@
 | --- | --- | --- |
 | cc-switch / codex / paseo: command not found | 安装位置和当前用户 PATH | 命令目录与 PATH |
 | GitHub CLI (gh) is not installed or not in PATH | 同一 Linux 用户下选 10 安装、11 登录、12 检查；旧 daemon 按需选 13 刷新 | GitHub CLI 安装与登录 |
+| Host key verification failed / FinalShell 能连而 Windows 应用失败 | 菜单 14 → 2：从可信 Linux 会话取得服务器指纹，Windows 核对一致后再接受 | [SSH 排查与配置指引](../03-remote/ssh-troubleshooting.md) |
+| authorized_keys is not a public key file | 菜单 14 → 1 / 4：核对文件与目标用户，验证自己的 .pub，备份后追加；不清空原文件 | [SSH 排查与配置指引](../03-remote/ssh-troubleshooting.md) |
 | Set-Service 拒绝访问 | PowerShell 是否有管理员权限 | 启动 Windows SSH Agent |
 | Error connecting to agent | ssh-agent 是否运行、ssh-add 所属环境 | 启动 Windows SSH Agent |
-| Identity added 后仍 Permission denied | 远端是否开启公钥、密钥是否匹配、权限和 Match 规则 | 开启 Linux 公钥认证 |
+| Identity added 后仍 Permission denied | 菜单 14 → 1 / 3 / 5：比较登录公钥指纹、权限、实际身份与 Match 规则 | [SSH 排查与配置指引](../03-remote/ssh-troubleshooting.md) |
 | pubkeyauthentication no | 找到来源配置并正确开启 | 开启 Linux 公钥认证 |
 | Windows SSH 输出 ok，Paseo 仍连接失败 | daemon 是否在线、地址和端口是否正确 | Paseo Desktop 连接 |
 | Choose a project | 远程主机下是否已添加并选中目录 | 添加 Linux 项目 |
@@ -23,12 +25,13 @@
 
 ## 连接失败的详细证据
 
-需要继续检查 SSH 时，可以在 Windows 获取详细日志。该命令仍使用无交互模式，不会要求输入服务器密码。
+全部 Windows PowerShell 排障命令、执行位置与预期结果集中在 [SSH 排查与配置指引](../03-remote/ssh-troubleshooting.md)，不必在多篇文章中寻找。需要继续检查时可取下面的详细日志；仍使用无交互模式，不会要求输入服务器密码。
 
 **Windows PowerShell · 详细 SSH 调试**
 
 ```powershell
-ssh -vvv -o BatchMode=yes root@YOUR_SERVER_IP "echo ok"
+# 先替换目标用户、地址和端口；分享输出前遮盖个人地址、用户名和路径。
+ssh -vvv -o BatchMode=yes -p 22 YOUR_LINUX_USER@YOUR_SERVER_IP "echo SSH_OK"
 ```
 
 重点看是否提供了预期密钥、服务器是否接受，以及拒绝后的认证方式。日志可能包含主机、用户名和路径，分享时只保留相关部分。

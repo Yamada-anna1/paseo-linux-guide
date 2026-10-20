@@ -5,6 +5,12 @@ const {buildFiles,root}=require('./build.cjs');
 const {files,pages,categories}=buildFiles();
 const failures=[];
 const normalize=s=>s.replace(/\r\n/g,'\n');
+const installer=normalize(fs.readFileSync(path.join(root,'install.sh'),'utf8'));
+const sshAppend=installer.match(/cat <<'GUIDE_SSH_APPEND_EXAMPLE'\n([\s\S]*?)\nGUIDE_SSH_APPEND_EXAMPLE/);
+const sshGuide=pages.find(p=>p.id==='ssh-troubleshooting');
+if(!sshAppend || !sshGuide?.blocks.some(b=>b.type==='code' && normalize(b.text)===sshAppend[1])) {
+  failures.push('SSH manual append example differs between installer and guide');
+}
 for(const [name,expected] of files) {
   const file=path.join(root,name);
   if(!fs.existsSync(file)) failures.push('Missing generated file: '+name);
@@ -36,6 +42,7 @@ for(const file of all) {
     /-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----/,
     /\b(?:gh[pousr]_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,}|sk-[A-Za-z0-9_-]{20,})\b/,
     /(?:password|api_key|access_token)\s*["']?\s*[:=]\s*["'][A-Za-z0-9_+\/-]{16,}["']/i,
+    /\b(?:ssh-ed25519|ssh-rsa|ecdsa-sha2-nistp(?:256|384|521))\s+AAAA[A-Za-z0-9+/]{20,}={0,3}/,
   ];
   if(secretPatterns.some(re=>re.test(text))) failures.push('Possible credential in '+relative);
   if(!relative.startsWith('scripts'+path.sep)) {

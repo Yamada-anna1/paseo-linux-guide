@@ -17,10 +17,11 @@ jobs:
         with:
           node-version: '24'
       - run: |
-          for file in install.sh scripts/test-installer.sh scripts/smoke-installer-ci.sh; do
+          for file in install.sh scripts/test-installer.sh scripts/test-ssh-guide.sh scripts/smoke-installer-ci.sh; do
             bash -n "$file" || exit 1
           done
       - run: bash scripts/test-installer.sh
+      - run: bash scripts/test-ssh-guide.sh
       - name: Verify piped menu in a real Linux terminal
         run: |
           python3 - <<'PY'

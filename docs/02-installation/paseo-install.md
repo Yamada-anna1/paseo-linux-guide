@@ -64,4 +64,4 @@ Paseo 默认 daemon 端口为 6767。使用 SSH 转发访问远程回环地址�
 
 ---
 
-[返回首页](../../README.md) · [本分类目录](README.md) · [上一篇：安装 CC-Switch CLI](cc-switch-install.md) · [下一篇：生成 Windows SSH 密钥](../03-remote/ssh-key.md)
+[返回首页](../../README.md) · [本分类目录](README.md) · [上一篇：安装 CC-Switch CLI](cc-switch-install.md) · [下一篇：SSH 排查与配置指引](../03-remote/ssh-troubleshooting.md)
