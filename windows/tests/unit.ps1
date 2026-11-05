@@ -34,7 +34,8 @@ try {
     }
     Case 'download-style scriptblock entry parses and preserves reusable source' {
         $source=[IO.File]::ReadAllText((Join-Path $root 'paseo-ssh.ps1'))
-        & ([scriptblock]::Create($source)) -Library
+        $downloadText=([char]0xfeff)+$source
+        & ([scriptblock]::Create($downloadText.TrimStart([char]0xfeff))) -Library
         Check ($script:PaseoSource.Trim([char]0xfeff) -ceq $source.Trim([char]0xfeff)) 'entry source not captured exactly'
     }
     Case 'public key validator rejects private files, multiline and spoofed binary type' {

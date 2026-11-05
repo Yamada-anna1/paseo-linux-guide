@@ -19,7 +19,7 @@ curl -fsSL https://raw.githubusercontent.com/Yamada-anna1/paseo-linux-guide/main
 在 **Windows PowerShell** 执行，不是在 FinalShell 的服务器终端：
 
 ```powershell
-& ([scriptblock]::Create((irm 'https://raw.githubusercontent.com/Yamada-anna1/paseo-ssh-windows/main/paseo-ssh.ps1')))
+& ([scriptblock]::Create((irm 'https://raw.githubusercontent.com/Yamada-anna1/paseo-ssh-windows/main/paseo-ssh.ps1').TrimStart([char]0xfeff)))
 ```
 
 这是下载并运行远程脚本，运行前应信任并审阅本仓库。也可以下载 `paseo-ssh.ps1` 后在本地运行。首次没有可信指纹时会显示获取方法并要求输入完整 SHA256 指纹，**不会把网络扫描到的指纹自动当成可信指纹**。已有成功设置时可直接使用保存的指纹，重装后指纹变化会停止。

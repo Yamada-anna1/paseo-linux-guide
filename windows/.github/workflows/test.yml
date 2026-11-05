@@ -18,6 +18,12 @@ jobs:
         run: ./tests/unit.ps1
       - shell: pwsh
         run: ./tests/unit.ps1
+      - name: Published HTTPS entry on Windows PowerShell
+        shell: powershell
+        run: ./tests/download.ps1
+      - name: Published HTTPS entry on PowerShell 7
+        shell: pwsh
+        run: ./tests/download.ps1
   linux:
     runs-on: ubuntu-latest
     timeout-minutes: 10

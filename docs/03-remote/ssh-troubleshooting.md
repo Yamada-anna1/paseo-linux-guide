@@ -15,7 +15,7 @@ Linux 菜单自身仅做只读准备；Windows 工具才会按上述范围写入
 **Windows PowerShell · 独立入口（首次需 IP 和可信指纹）**
 
 ```powershell
-& ([scriptblock]::Create((irm 'https://raw.githubusercontent.com/Yamada-anna1/paseo-ssh-windows/main/paseo-ssh.ps1')))
+& ([scriptblock]::Create((irm 'https://raw.githubusercontent.com/Yamada-anna1/paseo-ssh-windows/main/paseo-ssh.ps1').TrimStart([char]0xfeff)))
 ```
 
 > **重装与指纹：不能用扫描结果代替可信来源**

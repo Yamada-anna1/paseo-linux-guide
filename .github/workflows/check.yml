@@ -88,6 +88,12 @@ jobs:
       - name: PowerShell 7 isolated tests
         shell: pwsh
         run: ./windows/tests/unit.ps1
+      - name: Published HTTPS loader on PowerShell 5.1
+        shell: powershell
+        run: ./windows/tests/download.ps1
+      - name: Published HTTPS loader on PowerShell 7
+        shell: pwsh
+        run: ./windows/tests/download.ps1
   ssh-e2e:
     needs: checks
     runs-on: ubuntu-latest

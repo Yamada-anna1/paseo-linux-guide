@@ -721,7 +721,7 @@
       {"type":"h2","text":"推荐：菜单 14 一键准备，不再手工搬运长段代码"},
       {"type":"p","text":"在已信任的 Linux 会话或服务商控制台打开菜单，选 14，输入服务器公网 IPv4。菜单自动读取当前用户、SSH 端口和主机指纹，生成一条 Windows PowerShell 命令。复制整行到 Windows，工具会核对主机、检查或按需生成/加载登录密钥，通过 SSH 备份并追加公钥，再做 BatchMode 无交互测试。没有任何步骤会把私钥上传到服务器。服务器密码和私钥口令可能需要本人输入，无法用自动化绕过。"},
       {"type":"p","text":"Linux 菜单自身仅做只读准备；Windows 工具才会按上述范围写入设置、公钥和主机记录。密码不保存，SSH 配置与防火墙不改动。原来的手动指引保留为高级方案：14 → 输入 IP 或 q → 9 → 子选项 1–5。下面 A–G 是高级手动参考，不需要与一键方式重复执行。"},
-      {"type":"code","lang":"powershell","label":"Windows PowerShell · 独立入口（首次需 IP 和可信指纹）","text":"& ([scriptblock]::Create((irm 'https://raw.githubusercontent.com/Yamada-anna1/paseo-ssh-windows/main/paseo-ssh.ps1')))"},
+      {"type":"code","lang":"powershell","label":"Windows PowerShell · 独立入口（首次需 IP 和可信指纹）","text":"& ([scriptblock]::Create((irm 'https://raw.githubusercontent.com/Yamada-anna1/paseo-ssh-windows/main/paseo-ssh.ps1').TrimStart([char]0xfeff)))"},
       {"type":"note","title":"重装与指纹：不能用扫描结果代替可信来源","text":"使用 Linux 菜单生成的命令已带入该可信会话的主机指纹。独立 Windows 入口没有已保存设置时，会显示获取方法并要求粘贴完整 SHA256 指纹；不是输入 yes。重装后请重新运行可信 Linux 菜单 14，或在 Windows 设置入口输入从服务商控制台取得的新指纹。新指纹不匹配时不会登录或更新主机记录。"},
       {"type":"h2","text":"防止找不到：桌面连接入口、设置与备份"},
       {"type":"p","text":"Windows 工具首次运行会创建桌面「Paseo SSH Connect」（连接）和「Paseo SSH Settings」（设置与帮助）。英文名称用于兼容英文系统，内部说明仍为中文。前者进行连接检查，后者显示指纹命令、日志、备份位置，并修改用户、端口、私钥路径及重装后的可信指纹。默认 root / 22，可修改为专用普通用户。非秘密连接设置保存在 %LOCALAPPDATA%\\PaseoSSH\\settings.json；不保存密码或私钥内容。"},
