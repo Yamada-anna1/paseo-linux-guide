@@ -33,7 +33,7 @@ curl -fsSL https://raw.githubusercontent.com/Yamada-anna1/paseo-linux-guide/main
 | 11 | 确认后使用浏览器设备码登录 GitHub |
 | 12 | 只读检查 GitHub CLI 和登录状态 |
 | 13 | 确认后停止再启动本机 Paseo，以刷新环境 |
-| 14 | SSH 排查与配置指引：只读诊断、Windows 指纹、公钥安全追加、无交互测试 |
+| 14 | SSH 一键连接准备：输入 IP，自动生成带可信主机指纹的 Windows 命令 |
 | 0 | 退出菜单 |
 
 ## 已经安装 Codex 和 CC-Switch，但缺少 npm
@@ -46,7 +46,7 @@ curl -fsSL https://raw.githubusercontent.com/Yamada-anna1/paseo-linux-guide/main
 
 ## FinalShell 能连，但 Windows 应用 SSH 失败
 
-选 14 打开 SSH 排查子菜单。1 检查当前 Linux 用户、权限、公钥指纹和可读取的 SSH 配置；2 显示 Windows 主机指纹确认步骤；3 显示 Windows 密钥、ssh-agent 与公钥导出命令；4 显示 Linux 备份、验证并追加自己公钥的手动步骤；5 显示 Windows 无交互测试与应用重连步骤；0 返回。不会自动修改 SSH，也不会帮 Windows 接受服务器指纹。完整分段命令见 [SSH 排查与配置指引](../03-remote/ssh-troubleshooting.md)。
+选 14 后只输入服务器公网 IPv4，工具自动读取当前用户、SSH 端口和服务器 ED25519 指纹，输出一条 Windows PowerShell 命令。把这一整行复制到 Windows 执行即可进入自动授权与测试流程，不需要手动复制公钥或长段 Bash。Linux 本身不修改 SSH；Windows 工具仅在指纹匹配后登录，密码/私钥口令仍由本人输入。输入 q 后选 9 可查看原高级子菜单。完整说明见 [SSH 排查与配置指引](../03-remote/ssh-troubleshooting.md)。
 
 ## 安装器会做什么
 

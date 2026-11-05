@@ -6,9 +6,50 @@
 
 执行位置：**Windows PowerShell + Linux Bash · 每段均标明位置** · 分类：远程连接
 
-## 先看这里：菜单 14 不会自动修改 SSH
+## 推荐：菜单 14 一键准备，不再手工搬运长段代码
 
-在 Linux 安装菜单选 14：子选项 1 是当前用户的只读检查；2 是 Windows 主机指纹确认；3 是 Windows 密钥、ssh-agent 与公钥导出；4 是 Linux 公钥安全追加指引；5 是 Windows 无交互测试与应用重连指引。Windows 主机信任记录保存在 Windows 端，不能靠 Linux 安装菜单替你接受。手动改动前，保留当前 FinalShell / SSH 会话，并准备服务商控制台等备用入口。
+在已信任的 Linux 会话或服务商控制台打开菜单，选 14，输入服务器公网 IPv4。菜单自动读取当前用户、SSH 端口和主机指纹，生成一条 Windows PowerShell 命令。复制整行到 Windows，工具会核对主机、检查或按需生成/加载登录密钥，通过 SSH 备份并追加公钥，再做 BatchMode 无交互测试。没有任何步骤会把私钥上传到服务器。服务器密码和私钥口令可能需要本人输入，无法用自动化绕过。
+
+Linux 菜单自身仅做只读准备；Windows 工具才会按上述范围写入设置、公钥和主机记录。密码不保存，SSH 配置与防火墙不改动。原来的手动指引保留为高级方案：14 → 输入 IP 或 q → 9 → 子选项 1–5。下面 A–G 是高级手动参考，不需要与一键方式重复执行。
+
+**Windows PowerShell · 独立入口（首次需 IP 和可信指纹）**
+
+```powershell
+& ([scriptblock]::Create((irm 'https://raw.githubusercontent.com/Yamada-anna1/paseo-ssh-windows/main/paseo-ssh.ps1')))
+```
+
+> **重装与指纹：不能用扫描结果代替可信来源**
+>
+> 使用 Linux 菜单生成的命令已带入该可信会话的主机指纹。独立 Windows 入口没有已保存设置时，会显示获取方法并要求粘贴完整 SHA256 指纹；不是输入 yes。重装后请重新运行可信 Linux 菜单 14，或在 Windows 设置入口输入从服务商控制台取得的新指纹。新指纹不匹配时不会登录或更新主机记录。
+
+## 防止找不到：桌面连接入口、设置与备份
+
+Windows 工具首次运行会创建桌面「Paseo SSH Connect」（连接）和「Paseo SSH Settings」（设置与帮助）。英文名称用于兼容英文系统，内部说明仍为中文。前者进行连接检查，后者显示指纹命令、日志、备份位置，并修改用户、端口、私钥路径及重装后的可信指纹。默认 root / 22，可修改为专用普通用户。非秘密连接设置保存在 %LOCALAPPDATA%\PaseoSSH\settings.json；不保存密码或私钥内容。
+
+**Windows PowerShell · 找不到图标时打开本地设置**
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$env:LOCALAPPDATA\PaseoSSH\paseo-ssh.ps1" -Settings
+```
+
+| 保存内容 | 位置 |
+| --- | --- |
+| 连接配置 / 上次配置 | %LOCALAPPDATA%\PaseoSSH\settings.json / settings.json.previous |
+| 阶段和失败日志（不录制终端） | %LOCALAPPDATA%\PaseoSSH\last-run.log |
+| Windows 主机记录备份 | %USERPROFILE%\.ssh\known_hosts.paseo-backup.* |
+| Linux 授权备份 | 目标用户的 .ssh/authorized_keys.paseo-backup.* |
+
+## 本次排障记录：常见错误和已加入的保护
+
+| 遇到的情况 | 判断 | 一键流程的处理 |
+| --- | --- | --- |
+| Linux 提示 Get-Content 找不到 / Windows 提示 stat 找不到 | 命令执行窗口混淆 | 只复制一个标注 Windows 的入口，远端步骤由脚本执行 |
+| 重装系统后 REMOTE HOST IDENTIFICATION HAS CHANGED | 新主机密钥与旧记录不同，不能直接跳过 | 核对可信指纹后先备份，仅更新目标 IP/端口记录 |
+| 删除记录后仍 Host key verification failed | 没有完成首次信任确认 | 使用核对过的指纹生成严格验证记录，不盲目接受网络扫描 |
+| 密码登录 SSH_OK、BatchMode 却 Permission denied | 密码可用不代表密钥认证通过 | 按需补齐授权，最终强制无交互验收 |
+| authorized_keys is not a public key file | 授权文件为空、格式错误或未识别到公钥 | 验证公钥，备份后仅追加，不清空原文件 |
+| 多行粘贴后 syntax error near unexpected token for | 终端单行输入框压平换行，命令没有分隔 | 不再手工粘贴长段 Bash，固定远端脚本通过 SSH 执行 |
+| Copy-Item 先执行，备份变量后赋值 | 顺序颠倒导致副本落错目录 | 内部生成唯一备份路径，备份失败禁止继续写入 |
 
 | 出现什么 | 优先检查 | 不要做什么 |
 | --- | --- | --- |
@@ -197,7 +238,7 @@ stat -c '%a %U:%G %n' "$HOME" "$HOME/.ssh" "$HOME/.ssh/authorized_keys"
 >
 > 只在已确认目标账号和有效授权路径后操作。公钥必须来自 A 中你自己的完整 .pub 文件；不要粘贴网页占位符、聊天中的他人公钥或任何私钥。先验证待添加公钥并由你核对指纹，再备份已有 authorized_keys，最后用追加而不是覆盖。原有可用密钥和受限授权行必须保留。
 
-安全追加步骤也可在菜单 14 → 4 查看。先用 FinalShell 的文件上传功能，仅将 Windows 的 id_ed25519.pub 上传到目标 Linux 用户主目录，文件名改为 incoming-key.pub；不要上传 id_ed25519 私钥。目标目录以 D 中 $HOME 的实际输出为准，不是在文件管理器中输入字面量 $HOME。若 SSH 身份尚未验证成功，不要强求使用 scp 上传。
+以下为高级手动方式；一键向导成功时不要重复执行。安全追加步骤也可在菜单 14 → 输入 q → 9 → 4 查看。先用 FinalShell 的文件上传功能，仅将 Windows 的 id_ed25519.pub 上传到目标 Linux 用户主目录，文件名改为 incoming-key.pub；不要上传 id_ed25519 私钥。目标目录以 D 中 $HOME 的实际输出为准，不是在文件管理器中输入字面量 $HOME。若 SSH 身份尚未验证成功，不要强求使用 scp 上传。FinalShell 的单行输入框可能压平多行代码，不要在那里粘贴下面完整 Bash 块；优先使用一键向导。
 
 **Linux 目标用户 · 上传前先检查临时文件名（只读）**
 

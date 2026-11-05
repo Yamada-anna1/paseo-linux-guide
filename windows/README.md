@@ -30,8 +30,10 @@ curl -fsSL https://raw.githubusercontent.com/Yamada-anna1/paseo-linux-guide/main
 
 首次运行会保存本地入口，并创建两个桌面快捷方式（已有同名文件不覆盖）：
 
-- **Paseo SSH 连接**：运行连接向导。
-- **Paseo SSH 设置与帮助**：查看指纹命令、日志、备份，并修改账号、端口、私钥路径或重装后的可信指纹。
+- **Paseo SSH Connect**：运行连接向导。
+- **Paseo SSH Settings**：查看指纹命令、日志、备份，并修改账号、端口、私钥路径或重装后的可信指纹。
+
+使用英文快捷方式名是为了兼容英文版 Windows；工具内部仍为中文。桌面被组织策略限制时，会保留本地脚本并提示路径，不因快捷方式失败中断后续连接检查。
 
 找不到桌面图标时，在 Windows PowerShell 运行本地设置入口：
 
@@ -63,7 +65,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$env:LOCALAPPDATA\Paseo
 7. 已有同一把公钥时跳过，保留 `from=` / `command=` 等原有限制；拒绝符号链接、不安全权限和无效公钥。
 8. 最终必须通过 `BatchMode=yes` 的无交互测试，才更新正常 Windows 主机记录、保存成功设置并显示 `SSH_OK`。
 
-主机记录更新先备份，只替换对应 IP/端口的匹配记录。撤销标记或 CA 等特殊记录不会自动移除。已有全局 SSH 配置、代理、跳板机、FIDO/RSA/自定义密钥不在自动流程内；工具使用空的用户配置进行直接连接，但保留系统级撤销机制。
+主机记录更新先备份，只替换对应 IP/端口的匹配记录。撤销标记或 CA 等特殊记录不会自动移除。现有 SSH 配置仍会被读取；代理、跳板机、FIDO/RSA/自定义密钥不在自动诊断范围内。有额外认证策略时可能无法自动通过，工具不会删除这些配置。
 
 本工具不放开 root 登录、不关闭主机检查、不修改 `sshd_config`、防火墙或云端安全组。公钥认证关闭、自定义 `AuthorizedKeysFile`、`Match`、服务以不同 `-f/-o` 启动等问题需要管理员核实。缺少 OpenSSH 时会报缺少命令，不会暗中安装系统组件。
 

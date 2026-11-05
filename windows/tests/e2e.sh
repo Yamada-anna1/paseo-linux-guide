@@ -18,4 +18,4 @@ printf '%s\n' 'ListenAddress 127.0.0.1' 'Port 22222' "HostKey $fixture/host" "Pi
 sudo /usr/sbin/sshd -f "$fixture/sshd_config" -E "$fixture/sshd.log"
 server_pid=$(sudo cat "$fixture/sshd.pid")
 # Let the invoking CI runner read the dedicated test account's result, without changing its home permissions.
-sudo --preserve-env=CI,GITHUB_ACTIONS pwsh -NoProfile -File "$test_root/tests/e2e.ps1" -FixtureDirectory "$fixture" || { sudo cat "$fixture/sshd.log"; exit 1; }
+sudo --preserve-env=CI,GITHUB_ACTIONS timeout 120s pwsh -NoProfile -File "$test_root/tests/e2e.ps1" -FixtureDirectory "$fixture" || { sudo cat "$fixture/sshd.log"; exit 1; }

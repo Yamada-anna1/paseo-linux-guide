@@ -697,7 +697,7 @@ guide_ssh_wizard() {
     '会下载公开 Windows 工具；验证主机后，按需生成/加载密钥、备份并追加公钥、测试登录。' \
     '密码/私钥口令只在系统提示中输入，不保存。首次输入 IP 后正常情况下无需再选子步骤。'
   printf "& ([scriptblock]::Create((irm 'https://raw.githubusercontent.com/Yamada-anna1/paseo-ssh-windows/main/paseo-ssh.ps1'))) -Server '%s' -UserName '%s' -Port %s -ExpectedFingerprint '%s'\n" "$guide_server" "$guide_login" "$guide_port" "$guide_fingerprint"
-  printf '\n%s\n' '找不到设置：Windows 工具会提供桌面「Paseo SSH 连接」「Paseo SSH 设置与帮助」。' \
+  printf '\n%s\n' '找不到设置：Windows 桌面「Paseo SSH Connect」为连接入口，「Paseo SSH Settings」为设置与帮助。' \
     '重装后：再次运行此选项，核对新指纹；不会自动信任网络扫描结果。' \
     '高级服务配置、自定义 HostKey/AuthorizedKeysFile 或 Match 规则可能需要管理员处理。'
 }

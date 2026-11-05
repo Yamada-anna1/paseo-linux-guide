@@ -85,7 +85,7 @@
           ],
           [
             "公开版整理日期",
-            "2026-10-20"
+            "2026-11-05"
           ]
         ]
       },
@@ -224,13 +224,13 @@
       {"type":"p","text":"在已登录 Linux 服务器的 Bash 终端执行。需要已经有 curl 和 Bash。菜单从终端读取按键，不会把脚本下载内容当成输入。"},
       {"type":"code","lang":"bash","label":"Linux · 打开中文安装菜单","text":"curl -fsSL https://raw.githubusercontent.com/Yamada-anna1/paseo-linux-guide/main/install.sh | bash"},
       {"type":"h2","text":"按数字选择"},
-      {"type":"table","headers":["选项","功能"],"rows":[["1","安装 Codex、CC-Switch、Paseo、GitHub CLI，自动补齐依赖"],["2","只安装 Codex"],["3","只安装 CC-Switch"],["4","只安装 Paseo，自动补 Node.js/npm"],["5","启动 Paseo 并查看状态"],["6","确认后启用 Relay 并显示手机配对二维码"],["7","只读检查版本、路径和服务状态"],["8","确认后进行 Codex 官方账号设备码登录"],["9","打开 CC-Switch 服务商配置界面"],["10","安装 GitHub CLI（gh）"],["11","确认后使用浏览器设备码登录 GitHub"],["12","只读检查 GitHub CLI 和登录状态"],["13","确认后停止再启动本机 Paseo，以刷新环境"],["14","SSH 排查与配置指引：只读诊断、Windows 指纹、公钥安全追加、无交互测试"],["0","退出菜单"]]},
+      {"type":"table","headers":["选项","功能"],"rows":[["1","安装 Codex、CC-Switch、Paseo、GitHub CLI，自动补齐依赖"],["2","只安装 Codex"],["3","只安装 CC-Switch"],["4","只安装 Paseo，自动补 Node.js/npm"],["5","启动 Paseo 并查看状态"],["6","确认后启用 Relay 并显示手机配对二维码"],["7","只读检查版本、路径和服务状态"],["8","确认后进行 Codex 官方账号设备码登录"],["9","打开 CC-Switch 服务商配置界面"],["10","安装 GitHub CLI（gh）"],["11","确认后使用浏览器设备码登录 GitHub"],["12","只读检查 GitHub CLI 和登录状态"],["13","确认后停止再启动本机 Paseo，以刷新环境"],["14","SSH 一键连接准备：输入 IP，自动生成带可信主机指纹的 Windows 命令"],["0","退出菜单"]]},
       {"type":"h2","text":"已经安装 Codex 和 CC-Switch，但缺少 npm"},
       {"type":"p","text":"选 4 即可。安装器会先处理不可用的 Node.js/npm，再安装 Paseo。完成后选 5 启动；需要手机连接再选 6。从零安装则选 1。可正常运行的已有工具会自动跳过，不需要重装。"},
       {"type":"h2","text":"GitHub 克隆窗口提示找不到 gh"},
       {"type":"p","text":"在运行 Paseo 的同一台 Linux、同一个用户下打开菜单，依次选 10 安装、11 浏览器授权、12 检查。仍报找不到 gh 时，先等正在执行的任务结束，再选 13 并确认；回到 Paseo 重开 Clone from GitHub。13 不会自动执行，也不处理 systemd / 容器的服务定义。"},
       {"type":"h2","text":"FinalShell 能连，但 Windows 应用 SSH 失败"},
-      {"type":"p","text":"选 14 打开 SSH 排查子菜单。1 检查当前 Linux 用户、权限、公钥指纹和可读取的 SSH 配置；2 显示 Windows 主机指纹确认步骤；3 显示 Windows 密钥、ssh-agent 与公钥导出命令；4 显示 Linux 备份、验证并追加自己公钥的手动步骤；5 显示 Windows 无交互测试与应用重连步骤；0 返回。不会自动修改 SSH，也不会帮 Windows 接受服务器指纹。完整分段命令见 [SSH 排查与配置指引](../03-remote/ssh-troubleshooting.md)。"},
+      {"type":"p","text":"选 14 后只输入服务器公网 IPv4，工具自动读取当前用户、SSH 端口和服务器 ED25519 指纹，输出一条 Windows PowerShell 命令。把这一整行复制到 Windows 执行即可进入自动授权与测试流程，不需要手动复制公钥或长段 Bash。Linux 本身不修改 SSH；Windows 工具仅在指纹匹配后登录，密码/私钥口令仍由本人输入。输入 q 后选 9 可查看原高级子菜单。完整说明见 [SSH 排查与配置指引](../03-remote/ssh-troubleshooting.md)。"},
       {"type":"h2","text":"安装器会做什么"},
       {"type":"list","items":["支持 Linux x86_64 与 ARM64；基础包自动安装处理 apt-get、dnf、yum。其他发行版的缺失依赖会提示，不强行安装。","Node.js/npm 不可用或 Node.js 低于 22 时，通过 nvm 安装 Node.js 24 LTS；Alpine 的 musl Node.js 不纳入自动流程。","Codex 调用 OpenAI 官方安装器；CC-Switch 调用 SaladDay 项目安装器；Paseo 通过 npm 安装到当前用户的 ~/.local。","GitHub CLI 使用固定版本 2.102.0 官方二进制，校验固定 SHA-256 后安装到 ~/.local/bin/gh；不新增软件源，保留已有可用 gh。","在 Bash 配置末尾追加带标记的环境设置，避免重复追加，不覆盖原配置。","任一步骤失败就停止当前流程并返回菜单，不继续启动不存在的命令。","不会自动升级可用工具、修改 SSH 或防火墙，不自动登录账号，也不自动停止已有 daemon。"]},
       {"type":"note","title":"运行前确认来源","text":"此脚本会下载并运行对应上游软件；选择安装后，必要时会补装系统依赖。普通用户需要有相应 sudo 权限。建议使用已有专用 Linux 用户，不要交替用 root 与普通用户混装。源码：https://github.com/Yamada-anna1/paseo-linux-guide/blob/main/install.sh"},
@@ -718,8 +718,17 @@
     "description": "集中保存 Windows 与 Linux 的分段命令：主机指纹、登录公钥、授权文件、无交互测试。",
     "platform": "Windows PowerShell + Linux Bash · 每段均标明位置",
     "blocks": [
-      {"type":"h2","text":"先看这里：菜单 14 不会自动修改 SSH"},
-      {"type":"p","text":"在 Linux 安装菜单选 14：子选项 1 是当前用户的只读检查；2 是 Windows 主机指纹确认；3 是 Windows 密钥、ssh-agent 与公钥导出；4 是 Linux 公钥安全追加指引；5 是 Windows 无交互测试与应用重连指引。Windows 主机信任记录保存在 Windows 端，不能靠 Linux 安装菜单替你接受。手动改动前，保留当前 FinalShell / SSH 会话，并准备服务商控制台等备用入口。"},
+      {"type":"h2","text":"推荐：菜单 14 一键准备，不再手工搬运长段代码"},
+      {"type":"p","text":"在已信任的 Linux 会话或服务商控制台打开菜单，选 14，输入服务器公网 IPv4。菜单自动读取当前用户、SSH 端口和主机指纹，生成一条 Windows PowerShell 命令。复制整行到 Windows，工具会核对主机、检查或按需生成/加载登录密钥，通过 SSH 备份并追加公钥，再做 BatchMode 无交互测试。没有任何步骤会把私钥上传到服务器。服务器密码和私钥口令可能需要本人输入，无法用自动化绕过。"},
+      {"type":"p","text":"Linux 菜单自身仅做只读准备；Windows 工具才会按上述范围写入设置、公钥和主机记录。密码不保存，SSH 配置与防火墙不改动。原来的手动指引保留为高级方案：14 → 输入 IP 或 q → 9 → 子选项 1–5。下面 A–G 是高级手动参考，不需要与一键方式重复执行。"},
+      {"type":"code","lang":"powershell","label":"Windows PowerShell · 独立入口（首次需 IP 和可信指纹）","text":"& ([scriptblock]::Create((irm 'https://raw.githubusercontent.com/Yamada-anna1/paseo-ssh-windows/main/paseo-ssh.ps1')))"},
+      {"type":"note","title":"重装与指纹：不能用扫描结果代替可信来源","text":"使用 Linux 菜单生成的命令已带入该可信会话的主机指纹。独立 Windows 入口没有已保存设置时，会显示获取方法并要求粘贴完整 SHA256 指纹；不是输入 yes。重装后请重新运行可信 Linux 菜单 14，或在 Windows 设置入口输入从服务商控制台取得的新指纹。新指纹不匹配时不会登录或更新主机记录。"},
+      {"type":"h2","text":"防止找不到：桌面连接入口、设置与备份"},
+      {"type":"p","text":"Windows 工具首次运行会创建桌面「Paseo SSH Connect」（连接）和「Paseo SSH Settings」（设置与帮助）。英文名称用于兼容英文系统，内部说明仍为中文。前者进行连接检查，后者显示指纹命令、日志、备份位置，并修改用户、端口、私钥路径及重装后的可信指纹。默认 root / 22，可修改为专用普通用户。非秘密连接设置保存在 %LOCALAPPDATA%\\PaseoSSH\\settings.json；不保存密码或私钥内容。"},
+      {"type":"code","lang":"powershell","label":"Windows PowerShell · 找不到图标时打开本地设置","text":"powershell.exe -NoProfile -ExecutionPolicy Bypass -File \"$env:LOCALAPPDATA\\PaseoSSH\\paseo-ssh.ps1\" -Settings"},
+      {"type":"table","headers":["保存内容","位置"],"rows":[["连接配置 / 上次配置","%LOCALAPPDATA%\\PaseoSSH\\settings.json / settings.json.previous"],["阶段和失败日志（不录制终端）","%LOCALAPPDATA%\\PaseoSSH\\last-run.log"],["Windows 主机记录备份","%USERPROFILE%\\.ssh\\known_hosts.paseo-backup.*"],["Linux 授权备份","目标用户的 .ssh/authorized_keys.paseo-backup.*"]]},
+      {"type":"h2","text":"本次排障记录：常见错误和已加入的保护"},
+      {"type":"table","headers":["遇到的情况","判断","一键流程的处理"],"rows":[["Linux 提示 Get-Content 找不到 / Windows 提示 stat 找不到","命令执行窗口混淆","只复制一个标注 Windows 的入口，远端步骤由脚本执行"],["重装系统后 REMOTE HOST IDENTIFICATION HAS CHANGED","新主机密钥与旧记录不同，不能直接跳过","核对可信指纹后先备份，仅更新目标 IP/端口记录"],["删除记录后仍 Host key verification failed","没有完成首次信任确认","使用核对过的指纹生成严格验证记录，不盲目接受网络扫描"],["密码登录 SSH_OK、BatchMode 却 Permission denied","密码可用不代表密钥认证通过","按需补齐授权，最终强制无交互验收"],["authorized_keys is not a public key file","授权文件为空、格式错误或未识别到公钥","验证公钥，备份后仅追加，不清空原文件"],["多行粘贴后 syntax error near unexpected token for","终端单行输入框压平换行，命令没有分隔","不再手工粘贴长段 Bash，固定远端脚本通过 SSH 执行"],["Copy-Item 先执行，备份变量后赋值","顺序颠倒导致副本落错目录","内部生成唯一备份路径，备份失败禁止继续写入"]]},
       {"type":"table","headers":["出现什么","优先检查","不要做什么"],"rows":[["Host key verification failed","服务器主机指纹是否可信；Windows OpenSSH 是否已有正确记录","不要关闭 StrictHostKeyChecking，也不要盲目清除 known_hosts"],["Permission denied (publickey,password,keyboard-interactive)","是否提供预期用户密钥、Linux 是否授权、权限与认证规则","不代表密码一定错，不必先重装工具或重新生成密钥"],["authorized_keys is not a public key file","文件是否为空、格式错误或没有可识别的公钥","不要据此清空文件；先备份并核对自己的公钥"],["Windows 输出 SSH_OK，但应用仍失败","应用所用 Windows 用户、SSH 目标、身份文件及应用具体日志","不要把 SSH 成功等同于 Paseo daemon 或模型服务已正常"]]},
       {"type":"note","title":"两类指纹、两套路径，不要混淆","text":"服务器主机公钥指纹用于确认“连接的服务器是谁”，来自 /etc/ssh/ssh_host_*_key.pub；用户登录公钥指纹用于确认“哪把登录密钥被授权”，来自 Windows 的 id_ed25519.pub 与 Linux 的 authorized_keys。Windows 的 $env:USERPROFILE 与 Linux 的 $HOME 不是同一个目录。身份文件字段若在 Windows 客户端上配置，应填 Windows 私钥路径；远程项目字段才填 Linux 项目路径。"},
       {"type":"h2","text":"A. Windows：确认当前用户、SSH 和已有密钥（只读）"},
@@ -758,7 +767,7 @@
       {"type":"p","text":"常见安全设置为 .ssh 700、authorized_keys 600，属于目标用户；主目录不得允许不受信任的其他用户写入。不要只因主目录不是 700 就断定失败，仍要看所有者、ACL 和有效规则。若文件报 is not a public key file，只能说明此工具没识别出有效公钥，可能为空、格式不正确或内容无法识别；不是要求删除它。"},
       {"type":"h2","text":"E. Linux：保留原文件，验证后只追加自己的公钥"},
       {"type":"note","title":"手动步骤；安装菜单不会执行写入","text":"只在已确认目标账号和有效授权路径后操作。公钥必须来自 A 中你自己的完整 .pub 文件；不要粘贴网页占位符、聊天中的他人公钥或任何私钥。先验证待添加公钥并由你核对指纹，再备份已有 authorized_keys，最后用追加而不是覆盖。原有可用密钥和受限授权行必须保留。"},
-      {"type":"p","text":"安全追加步骤也可在菜单 14 → 4 查看。先用 FinalShell 的文件上传功能，仅将 Windows 的 id_ed25519.pub 上传到目标 Linux 用户主目录，文件名改为 incoming-key.pub；不要上传 id_ed25519 私钥。目标目录以 D 中 $HOME 的实际输出为准，不是在文件管理器中输入字面量 $HOME。若 SSH 身份尚未验证成功，不要强求使用 scp 上传。"},
+      {"type":"p","text":"以下为高级手动方式；一键向导成功时不要重复执行。安全追加步骤也可在菜单 14 → 输入 q → 9 → 4 查看。先用 FinalShell 的文件上传功能，仅将 Windows 的 id_ed25519.pub 上传到目标 Linux 用户主目录，文件名改为 incoming-key.pub；不要上传 id_ed25519 私钥。目标目录以 D 中 $HOME 的实际输出为准，不是在文件管理器中输入字面量 $HOME。若 SSH 身份尚未验证成功，不要强求使用 scp 上传。FinalShell 的单行输入框可能压平多行代码，不要在那里粘贴下面完整 Bash 块；优先使用一键向导。"},
       {"type":"code","lang":"bash","label":"Linux 目标用户 · 上传前先检查临时文件名（只读）","text":"# 只有显示“可上传”才向该路径上传 .pub。已有文件或符号链接时先人工核对，不覆盖。\nif [ -e \"$HOME/incoming-key.pub\" ] || [ -L \"$HOME/incoming-key.pub\" ]; then\n    printf '%s\\n' '停止：incoming-key.pub 已存在，先核对，不要覆盖。'\nelse\n    printf '%s\\n' '可上传：只上传自己的 .pub 公钥到主目录，命名为 incoming-key.pub。'\nfi"},
       {"type":"code","lang":"powershell","label":"Windows 普通 PowerShell · 可选替代上传（会写入 Linux 候选文件）","text":"# 仅在已核对主机指纹、普通 SSH 能认证且远端目标文件不存在时使用。\n# 与 FinalShell 上传二选一；仅传 .pub 公钥，不传私钥。\nscp -P 22 \"$env:USERPROFILE\\.ssh\\id_ed25519.pub\" YOUR_LINUX_USER@YOUR_SERVER_IP:incoming-key.pub"},
       {"type":"p","text":"上传后先执行下一段只读指纹命令，由你与 Windows 结果核对一致后，再执行后面的完整授权块。授权块会验证单行公钥、显示指纹、备份并追加，但不会暂停等待你核对指纹。文件内容只作为数据读取，绝不作为 shell 命令执行；空值、多行、占位符、私钥或不合法格式均会拒绝。不要使用 eval，也不要把自己的密钥直接嵌入公开脚本。"},
@@ -2015,12 +2024,12 @@
           ],
           [
             "Host key verification failed / FinalShell 能连而 Windows 应用失败",
-            "菜单 14 → 2：从可信 Linux 会话取得服务器指纹，Windows 核对一致后再接受",
+            "菜单 14：从可信 Linux 会话自动取得指纹并生成 Windows 入口；高级手动方式为 14 → q → 9 → 2",
             "[SSH 排查与配置指引](../03-remote/ssh-troubleshooting.md)"
           ],
           [
             "authorized_keys is not a public key file",
-            "菜单 14 → 1 / 4：核对文件与目标用户，验证自己的 .pub，备份后追加；不清空原文件",
+            "菜单 14 一键向导：验证公钥、备份后追加；高级方式 14 → q → 9 → 1 / 4，不清空原文件",
             "[SSH 排查与配置指引](../03-remote/ssh-troubleshooting.md)"
           ],
           [
@@ -2035,7 +2044,7 @@
           ],
           [
             "Identity added 后仍 Permission denied",
-            "菜单 14 → 1 / 3 / 5：比较登录公钥指纹、权限、实际身份与 Match 规则",
+            "先用菜单 14 一键向导；仍失败时在 14 → q → 9 的高级指引核对密钥、权限与 Match 规则",
             "[SSH 排查与配置指引](../03-remote/ssh-troubleshooting.md)"
           ],
           [

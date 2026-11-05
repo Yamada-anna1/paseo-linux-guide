@@ -35,7 +35,7 @@ try {
     Case 'download-style scriptblock entry parses and preserves reusable source' {
         $source=[IO.File]::ReadAllText((Join-Path $root 'paseo-ssh.ps1'))
         & ([scriptblock]::Create($source)) -Library
-        Check ($script:PaseoSource.Contains('function Invoke-PaseoSetup')) 'entry source not captured'
+        Check ($script:PaseoSource.Trim([char]0xfeff) -ceq $source.Trim([char]0xfeff)) 'entry source not captured exactly'
     }
     Case 'public key validator rejects private files, multiline and spoofed binary type' {
         Must-Fail { Get-Ed25519Info ([IO.File]::ReadAllText($fixture)) } '.'
@@ -52,6 +52,18 @@ try {
             Check ($result.Code -eq 0) $result.Err
             Check ($result.Out.Trim() -ceq [Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes($value))) ('argument corrupted: '+$value)
         }
+    }
+    Case 'real Windows OpenSSH parses the pinned known_hosts path with spaces' {
+        $emptyConfig=Join-Path $suite 'empty-config'
+        Write-Utf8File $emptyConfig ''
+        $pinPath=Join-Path $suite 'directory with spaces/verified-host'
+        $settings=[pscustomobject]@{IdentityFile=$fixture;Port=2222;UserName='root';Server='127.0.0.1'}
+        $arguments=@('-F',$emptyConfig,'-G')+@(Get-SshArguments $settings $pinPath $emptyConfig $false)
+        $result=& $script:RealNative (Get-NativePath 'ssh') $arguments
+        Check ($result.Code -eq 0) $result.Err
+        Check ($result.Out.Contains($pinPath.Replace('\','/'))) 'OpenSSH parsed pinned path incorrectly'
+        Check ($result.Out -match '(?m)^batchmode yes\r?$') 'batch mode not set'
+        Check ($result.Out -match '(?m)^stricthostkeychecking (true|yes)\r?$') 'host checking not strict'
     }
     function Invoke-Native([string]$File,[string[]]$Arguments,[switch]$Interactive,[int]$TimeoutSeconds=30) {
         $name=[IO.Path]::GetFileNameWithoutExtension($File)

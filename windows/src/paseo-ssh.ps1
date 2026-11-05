@@ -14,7 +14,7 @@ param(
 
 $script:PaseoVersion = '1.0.0'
 $script:RemoteBase64 = '__REMOTE_BASE64__'
-$script:PaseoSource = if ($PSCommandPath) { [IO.File]::ReadAllText($PSCommandPath) } else { $MyInvocation.MyCommand.Definition }
+$script:PaseoSource = if ($MyInvocation.MyCommand -is [Management.Automation.ExternalScriptInfo]) { [IO.File]::ReadAllText($MyInvocation.MyCommand.Path) } else { $MyInvocation.MyCommand.Definition }
 
 function Write-Utf8File([string]$Path, [string]$Text) {
     [IO.File]::WriteAllText($Path, $Text, (New-Object Text.UTF8Encoding($false)))
@@ -78,7 +78,7 @@ function Invoke-Native([string]$File, [string[]]$Arguments, [switch]$Interactive
     } finally { $process.Dispose() }
 }
 function Get-SshArguments($Options, [string]$Known, [string]$EmptyConfig, [bool]$Interactive) {
-    @('-F',$EmptyConfig,'-o','StrictHostKeyChecking=yes','-o',('UserKnownHostsFile="'+$Known.Replace('\','/')+'"'),
+    @('-o','StrictHostKeyChecking=yes','-o',('UserKnownHostsFile="'+$Known.Replace('\','/')+'"'),
       '-o','HostKeyAlgorithms=ssh-ed25519','-o','UpdateHostKeys=no','-o','IdentitiesOnly=yes',
       '-o',('BatchMode='+$(if($Interactive){'no'}else{'yes'})),'-o','ConnectTimeout=10',
       '-o','ConnectionAttempts=1','-o','NumberOfPasswordPrompts=2','-i',$Options.IdentityFile,
@@ -144,17 +144,22 @@ function Install-LocalEntry([string]$State,[string]$DesktopDirectory='') {
     [IO.File]::WriteAllText($entry,$script:PaseoSource,(New-Object Text.UTF8Encoding($true)))
     $desktop = if($DesktopDirectory){$DesktopDirectory}else{[Environment]::GetFolderPath('Desktop')}
     if (!$desktop -or !(Test-Path -LiteralPath $desktop)) { return }
-    $shell = New-Object -ComObject WScript.Shell
-    foreach ($item in @(@('Paseo SSH 连接.lnk',''),@('Paseo SSH 设置与帮助.lnk',' -Settings'))) {
+    try {
+      $shell = New-Object -ComObject WScript.Shell
+      foreach ($item in @(@('Paseo SSH Connect.lnk',''),@('Paseo SSH Settings.lnk',' -Settings'))) {
         $link = Join-Path $desktop $item[0]
         if (Test-Path -LiteralPath $link) { continue }
         $shortcut = $shell.CreateShortcut($link)
         $shortcut.TargetPath = Join-Path $env:SystemRoot 'System32\WindowsPowerShell\v1.0\powershell.exe'
         $shortcut.Arguments = '-NoProfile -NoExit -ExecutionPolicy Bypass -File "'+$entry+'"'+$item[1]
         $shortcut.WorkingDirectory = $State
+        $shortcut.Description = 'Paseo SSH connection, settings and troubleshooting'
         $shortcut.Save()
     }
-    Write-Host '桌面入口：Paseo SSH 连接 / Paseo SSH 设置与帮助（已有同名入口不覆盖）。'
+      Write-Host '桌面入口：Paseo SSH Connect（连接）/ Paseo SSH Settings（设置与帮助）；已有同名入口不覆盖。'
+    } catch {
+      Write-Warning "无法创建桌面快捷方式，但本地入口已保存：$entry；可用 -Settings 打开设置。"
+    }
 }
 function Read-Settings([string]$State) {
     $file = Join-Path $State 'settings.json'
@@ -303,7 +308,7 @@ if (!$Library) {
                 $ExpectedFingerprint=$answer
             }
             Save-Settings $StateDirectory ([pscustomobject]@{Server=$Server;UserName=$UserName;Port=$Port;IdentityFile=$IdentityFile;Fingerprint=$ExpectedFingerprint})
-            Write-Host '设置已保存。连接请打开桌面「Paseo SSH 连接」。'; return
+            Write-Host '设置已保存。连接请打开桌面「Paseo SSH Connect」。'; return
         }
         $options=[pscustomobject]@{Server=$Server;Port=$Port;UserName=$UserName;IdentityFile=$IdentityFile;ExpectedFingerprint=$ExpectedFingerprint;StateDirectory=$StateDirectory}
         Invoke-PaseoSetup $options (Join-Path $env:USERPROFILE '.ssh\known_hosts')

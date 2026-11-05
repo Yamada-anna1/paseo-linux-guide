@@ -28,7 +28,7 @@ curl -fsSL https://raw.githubusercontent.com/Yamada-anna1/paseo-linux-guide/main
 11) 登录 GitHub（浏览器设备码授权）
 12) 检查 GitHub CLI 和登录状态（只读）
 13) 刷新 Paseo 环境（停止后启动，需确认）
-14) SSH 排查与配置指引（只读检查 / 分步操作）
+14) SSH 一键连接准备（输入 IP / 生成 Windows 命令）
 0) 退出
 ```
 
@@ -36,14 +36,16 @@ curl -fsSL https://raw.githubusercontent.com/Yamada-anna1/paseo-linux-guide/main
 
 **Paseo 的 Clone from GitHub 提示 `GitHub CLI (gh) is not installed or not in PATH`：依次选 `10 → 11 → 12`。** 11 按提示在自己的电脑或手机浏览器授权；12 确认服务器上的登录。仍报找不到 `gh` 时，等任务结束后选 `13` 并确认，再回到 Paseo 重开克隆窗口。请使用运行 Paseo 的同一个 Linux 用户；不必重装全部工具。
 
-**FinalShell 能连，但 Windows 应用提示 SSH 连接失败：选 `14`。** 子菜单 `1` 为 Linux 只读诊断，`2` 为 Windows 主机指纹确认，`3` 为 Windows 密钥 / ssh-agent / 公钥导出，`4` 为 Linux 公钥安全追加指引，`5` 为 Windows 无交互测试。菜单不会替你修改 SSH；Windows 的主机信任确认必须在 Windows 端完成。所有 PowerShell 命令均有执行位置、用途和预期备注，集中在 [SSH 排查与配置指引](docs/03-remote/ssh-troubleshooting.md)。
+**FinalShell 能连，但 Windows 应用提示 SSH 连接失败：选 `14`。** 只需输入这台服务器的公网 IPv4；菜单自动读取当前用户、SSH 端口和主机指纹，输出一条 **Windows PowerShell** 命令。把它复制到 Windows 执行，工具会验证服务器、按需加载密钥、备份追加公钥并测试无交互登录。服务器密码和私钥口令仍由本人输入；不会盲目信任网络扫描结果。高级分步指引保留在 `14 → 输入 IP 或 q → 9`。详见 [SSH 排查与配置指引](docs/03-remote/ssh-troubleshooting.md)。
+
+**Windows 独立工具**：[paseo-ssh-windows](https://github.com/Yamada-anna1/paseo-ssh-windows)。它会创建桌面“Paseo SSH Connect”（连接）和“Paseo SSH Settings”（设置与帮助），集中保存非秘密连接设置、指纹获取方法、日志及备份位置。单独启动时，首次需要输入 IP 和从可信控制台取得的指纹；使用 Linux 菜单生成的命令则已带入指纹。
 
 - 缺少或无法运行的 Node.js/npm，或 Node.js 低于 22：通过 nvm 安装 Node.js 24 LTS，并保存 Bash 环境。
 - GitHub CLI 安装固定版本 `2.102.0` 官方 Linux 二进制，并核对固定 SHA-256；安装到 `~/.local/bin/gh`，不新增系统软件源。已有可用版本直接保留。
 - 任一步骤失败会停止当前流程、显示报错并返回菜单，不会继续调用没有安装好的工具。
 - 安装器的菜单直接从终端读取输入，支持上面的 `curl … | bash` 方式。
 - 不自动登录账号，不修改 SSH、防火墙、API Key，不自动停止已有 daemon。
-- SSH 子菜单只读检查或显示手动步骤：区分服务器主机指纹与登录公钥指纹，先备份后追加，不覆盖已有密钥，不关闭主机指纹检查。
+- Linux 选项 14 只读检查并生成命令；Windows 工具执行经过验证的授权追加。两者均不放宽 SSH 配置、不关闭主机检查。私钥不上传、密码不保存，原有受限公钥条目不被无限制副本替代。
 - 登录、Relay 启用及 Paseo 环境刷新会再确认；设备码、二维码与配对链接不可公开。
 - GitHub 授权由你本人完成；无系统凭据库时 gh 可能以明文保存凭据。检测到 `GH_TOKEN` / `GITHUB_TOKEN` 时不自动覆盖或转为持久化登录。
 - 菜单内可立即继续启动或配对。退出后，**重新连接一次 SSH**，让原终端加载新 PATH / Node.js 环境。
@@ -57,7 +59,7 @@ curl -fsSL https://raw.githubusercontent.com/Yamada-anna1/paseo-linux-guide/main
 - **已经配置好**：[日常命令速查](docs/06-maintenance/daily.md)
 - **模型缺少 / 刷新不出来**：[四条诊断命令](docs/05-models/models-missing.md)
 - **Windows 远程连接**：[SSH 密钥](docs/03-remote/ssh-key.md) → [SSH Agent](docs/03-remote/ssh-agent.md) → [连接测试](docs/03-remote/ssh-test.md) → [Paseo 连接](docs/03-remote/desktop-ssh.md)
-- **FinalShell 能连，Windows 应用 SSH 失败**：[SSH 排查与配置指引](docs/03-remote/ssh-troubleshooting.md)（菜单 `14`，区分 Windows / Linux，逐段复制）
+- **FinalShell 能连，Windows 应用 SSH 失败**：[SSH 一键连接与排查](docs/03-remote/ssh-troubleshooting.md)（菜单 `14`，输入 IP 后生成 Windows 命令）
 - **手机连接**：[二维码与 Relay](docs/04-projects-mobile/mobile-pair.md)
 - **GitHub 克隆报错 / 登录**：[GitHub CLI 安装与登录](docs/02-installation/github-cli.md)
 - **喜欢左侧目录的版式**：[下载单文件 HTML 手册](https://github.com/Yamada-anna1/paseo-linux-guide/raw/refs/heads/main/index.html)，用浏览器打开。
@@ -216,7 +218,7 @@ git clone https://github.com/Yamada-anna1/paseo-linux-guide.git
 
 ## 文档维护
 
-本公开版更新于 **2026-10-20**。安装入口与非交互安装参数已按上游文档及安装脚本核对。测试分为离线模拟测试和 GitHub 托管 Ubuntu 临时环境中的真实安装测试；结果见 [Actions](https://github.com/Yamada-anna1/paseo-linux-guide/actions)。没有连接或修改任何用户的服务器，测试不会登录账号、请求模型或生成配对二维码。
+本公开版更新于 **2026-11-05**。v2.0.0 新增 Windows SSH 一键工具与菜单 14 向导。测试包括 Windows PowerShell 5.1 / PowerShell 7 的隔离测试、Linux 授权保护测试，以及临时本地 sshd 的真实端到端登录。安装器另有真实软件安装回归测试；结果见 [Actions](https://github.com/Yamada-anna1/paseo-linux-guide/actions)。没有连接或修改个人服务器，测试不登录外部账号、请求模型或生成配对二维码。不承诺兼容所有发行版、网络或管理员自定义 SSH 规则。
 
 目录结构：
 
@@ -230,6 +232,7 @@ paseo-linux-guide/
 ├── src/guide-shell.html      # HTML 外壳
 ├── src/readme-template.md    # 首页模板
 ├── scripts/                  # 文档构建、检查与安装器测试
+├── windows/                  # 经测试后发布到独立仓库的 PowerShell 工具源码
 └── .github/workflows/        # Ubuntu 自动测试
 ```
 
@@ -252,3 +255,5 @@ npm run test:installer
 `scripts/smoke-installer-ci.sh` 仅允许在临时的 GitHub 托管 runner 中执行真实安装；请勿作为个人服务器的安装入口。
 
 检查包括文档数量、内部链接、生成内容一致性、脚本语法和常见凭据模式，不代替人工安全审查。具体资料见 [参考资料](docs/06-maintenance/references.md)。
+
+Windows 工具的维护与测试见 [Windows 工具说明](windows/README.md)。完整发行需先通过两个 PowerShell 版本、Linux 授权保护和真实 SSH 端到端测试，再发布独立仓库。

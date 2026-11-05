@@ -10,11 +10,11 @@
 | --- | --- | --- |
 | cc-switch / codex / paseo: command not found | 安装位置和当前用户 PATH | 命令目录与 PATH |
 | GitHub CLI (gh) is not installed or not in PATH | 同一 Linux 用户下选 10 安装、11 登录、12 检查；旧 daemon 按需选 13 刷新 | GitHub CLI 安装与登录 |
-| Host key verification failed / FinalShell 能连而 Windows 应用失败 | 菜单 14 → 2：从可信 Linux 会话取得服务器指纹，Windows 核对一致后再接受 | [SSH 排查与配置指引](../03-remote/ssh-troubleshooting.md) |
-| authorized_keys is not a public key file | 菜单 14 → 1 / 4：核对文件与目标用户，验证自己的 .pub，备份后追加；不清空原文件 | [SSH 排查与配置指引](../03-remote/ssh-troubleshooting.md) |
+| Host key verification failed / FinalShell 能连而 Windows 应用失败 | 菜单 14：从可信 Linux 会话自动取得指纹并生成 Windows 入口；高级手动方式为 14 → q → 9 → 2 | [SSH 排查与配置指引](../03-remote/ssh-troubleshooting.md) |
+| authorized_keys is not a public key file | 菜单 14 一键向导：验证公钥、备份后追加；高级方式 14 → q → 9 → 1 / 4，不清空原文件 | [SSH 排查与配置指引](../03-remote/ssh-troubleshooting.md) |
 | Set-Service 拒绝访问 | PowerShell 是否有管理员权限 | 启动 Windows SSH Agent |
 | Error connecting to agent | ssh-agent 是否运行、ssh-add 所属环境 | 启动 Windows SSH Agent |
-| Identity added 后仍 Permission denied | 菜单 14 → 1 / 3 / 5：比较登录公钥指纹、权限、实际身份与 Match 规则 | [SSH 排查与配置指引](../03-remote/ssh-troubleshooting.md) |
+| Identity added 后仍 Permission denied | 先用菜单 14 一键向导；仍失败时在 14 → q → 9 的高级指引核对密钥、权限与 Match 规则 | [SSH 排查与配置指引](../03-remote/ssh-troubleshooting.md) |
 | pubkeyauthentication no | 找到来源配置并正确开启 | 开启 Linux 公钥认证 |
 | Windows SSH 输出 ok，Paseo 仍连接失败 | daemon 是否在线、地址和端口是否正确 | Paseo Desktop 连接 |
 | Choose a project | 远程主机下是否已添加并选中目录 | 添加 Linux 项目 |

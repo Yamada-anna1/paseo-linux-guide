@@ -14,7 +14,7 @@ param(
 
 $script:PaseoVersion = '1.0.0'
 $script:RemoteBase64 = 'IyEvdXNyL2Jpbi9lbnYgYmFzaAojIENhbGxlZCBvbmx5IEFGVEVSIGhvc3QgZmluZ2VycHJpbnQgdmVyaWZpY2F0aW9uIGFuZCBzdWNjZXNzZnVsIFNTSCBhdXRoZW50aWNhdGlvbi4Kc2V0IC1ldW8gcGlwZWZhaWwKZmFpbCgpIHsgcHJpbnRmICdTVE9QOiAlc1xuJyAiJCoiID4mMjsgZXhpdCAxOyB9CltbICQjID09IDEgJiYgIiQxIiA9fiBeW0EtWmEtejAtOSsvXSs9ezAsMn0kIF1dIHx8IGZhaWwgJ2ludmFsaWQgcHVibGljIGtleSBhcmd1bWVudCcKa2V5X2Jsb2I9JDEKdGFyZ2V0X2hvbWU9JHtIT01FOi19CltbICIkdGFyZ2V0X2hvbWUiID09IC8qICYmICIkdGFyZ2V0X2hvbWUiICE9IC8gJiYgLWQgIiR0YXJnZXRfaG9tZSIgJiYgISAtTCAiJHRhcmdldF9ob21lIiBdXSB8fCBmYWlsICdpbnZhbGlkIHVzZXIgaG9tZScKdGFyZ2V0X2hvbWU9JChjZCAtUCAtLSAiJHRhcmdldF9ob21lIiAmJiBwd2QgLVApCltbICIkdGFyZ2V0X2hvbWUiICE9IC8gXV0gfHwgZmFpbCAncm9vdCBkaXJlY3RvcnkgaXMgbm90IGEgdXNlciBob21lJwpzc2hfZGlyPSIkdGFyZ2V0X2hvbWUvLnNzaCIKYXV0aF9maWxlPSIkc3NoX2Rpci9hdXRob3JpemVkX2tleXMiCltbICEgLUwgIiRzc2hfZGlyIiAmJiAoICEgLWUgIiRzc2hfZGlyIiB8fCAtZCAiJHNzaF9kaXIiICkgXV0gfHwgZmFpbCAndW5zYWZlIC5zc2ggZGlyZWN0b3J5JwpbWyAhIC1MICIkYXV0aF9maWxlIiAmJiAoICEgLWUgIiRhdXRoX2ZpbGUiIHx8IC1mICIkYXV0aF9maWxlIiApIF1dIHx8IGZhaWwgJ3Vuc2FmZSBhdXRob3JpemF0aW9uIGZpbGUnCmZvciB0YXJnZXQgaW4gIiR0YXJnZXRfaG9tZSIgIiRzc2hfZGlyIiAiJGF1dGhfZmlsZSI7IGRvCiAgaWYgW1sgLWUgIiR0YXJnZXQiIF1dOyB0aGVuCiAgICBbWyAtTyAiJHRhcmdldCIgXV0gfHwgZmFpbCAnb3duZXJzaGlwIGRvZXMgbm90IG1hdGNoIGxvZ2luIHVzZXInCiAgICBtb2RlPSQoc3RhdCAtYyAlYSAtLSAiJHRhcmdldCIpCiAgICAoKCAoOCMkbW9kZSAmIDAwMjIpID09IDAgKSkgfHwgZmFpbCAnZ3JvdXAvd29ybGQgd3JpdGFibGUgdGFyZ2V0OyBpbnNwZWN0IGJlZm9yZSByZXBhaXInCiAgZmkKZG9uZQp1bWFzayAwNzcKd29ya19kaXI9JChta3RlbXAgLWQgL3RtcC9wYXNlby1hdXRob3JpemUuWFhYWFhYWFgpCmNsZWFudXAoKSB7IFtbICIkd29ya19kaXIiID09IC90bXAvcGFzZW8tYXV0aG9yaXplLiogJiYgLWQgIiR3b3JrX2RpciIgJiYgISAtTCAiJHdvcmtfZGlyIiBdXSAmJiBybSAtcmYgLS0gIiR3b3JrX2RpciI7IH0KdHJhcCBjbGVhbnVwIEVYSVQKcHJpbnRmICdzc2gtZWQyNTUxOSAlcyBwYXNlby1zc2hcbicgIiRrZXlfYmxvYiIgPiAiJHdvcmtfZGlyL2tleS5wdWIiCnNzaC1rZXlnZW4gLUUgc2hhMjU2IC1sZiAiJHdvcmtfZGlyL2tleS5wdWIiIHx8IGZhaWwgJ2ludmFsaWQgRUQyNTUxOSBwdWJsaWMga2V5JwppZiBbWyAtZiAiJGF1dGhfZmlsZSIgXV07IHRoZW4KICBmb3VuZD0kKGF3ayAtdiBrZXk9IiRrZXlfYmxvYiIgJ2luZGV4KCQwLGtleSkgeyBmb3VuZD0xIH0gRU5EIHsgcHJpbnQgZm91bmQrMCB9JyAiJGF1dGhfZmlsZSIpCiAgaWYgW1sgIiRmb3VuZCIgPT0gMSBdXTsgdGhlbgogICAgcHJpbnRmICclc1xuJyAnS0VZX0FMUkVBRFlfUFJFU0VOVDogcmVzdHJpY3Rpb25zIHByZXNlcnZlZCcKICAgIGV4aXQgMAogIGZpCmZpCm1rZGlyIC1wIC1tIDcwMCAtLSAiJHNzaF9kaXIiCmlmIFtbIC1mICIkYXV0aF9maWxlIiBdXTsgdGhlbgogIGJhY2t1cD0kKG1rdGVtcCAiJGF1dGhfZmlsZS5wYXNlby1iYWNrdXAuWFhYWFhYWFgiKQogIGNwIC1wIC0tICIkYXV0aF9maWxlIiAiJGJhY2t1cCIgfHwgZmFpbCAnYmFja3VwIGZhaWxlZDsgbm8gYXBwZW5kJwogIHByaW50ZiAnQkFDS1VQX09LOiAlc1xuJyAiJGJhY2t1cCIKZmkKcHJpbnRmICdcbnNzaC1lZDI1NTE5ICVzIHBhc2VvLXNzaFxuJyAiJGtleV9ibG9iIiA+PiAiJGF1dGhfZmlsZSIKcHJpbnRmICclc1xuJyAnS0VZX0FEREVEJwpzc2gta2V5Z2VuIC1FIHNoYTI1NiAtbGYgIiRhdXRoX2ZpbGUiCg=='
-$script:PaseoSource = if ($PSCommandPath) { [IO.File]::ReadAllText($PSCommandPath) } else { $MyInvocation.MyCommand.Definition }
+$script:PaseoSource = if ($MyInvocation.MyCommand -is [Management.Automation.ExternalScriptInfo]) { [IO.File]::ReadAllText($MyInvocation.MyCommand.Path) } else { $MyInvocation.MyCommand.Definition }
 
 function Write-Utf8File([string]$Path, [string]$Text) {
     [IO.File]::WriteAllText($Path, $Text, (New-Object Text.UTF8Encoding($false)))
@@ -78,7 +78,7 @@ function Invoke-Native([string]$File, [string[]]$Arguments, [switch]$Interactive
     } finally { $process.Dispose() }
 }
 function Get-SshArguments($Options, [string]$Known, [string]$EmptyConfig, [bool]$Interactive) {
-    @('-F',$EmptyConfig,'-o','StrictHostKeyChecking=yes','-o',('UserKnownHostsFile="'+$Known.Replace('\','/')+'"'),
+    @('-o','StrictHostKeyChecking=yes','-o',('UserKnownHostsFile="'+$Known.Replace('\','/')+'"'),
       '-o','HostKeyAlgorithms=ssh-ed25519','-o','UpdateHostKeys=no','-o','IdentitiesOnly=yes',
       '-o',('BatchMode='+$(if($Interactive){'no'}else{'yes'})),'-o','ConnectTimeout=10',
       '-o','ConnectionAttempts=1','-o','NumberOfPasswordPrompts=2','-i',$Options.IdentityFile,
@@ -144,17 +144,22 @@ function Install-LocalEntry([string]$State,[string]$DesktopDirectory='') {
     [IO.File]::WriteAllText($entry,$script:PaseoSource,(New-Object Text.UTF8Encoding($true)))
     $desktop = if($DesktopDirectory){$DesktopDirectory}else{[Environment]::GetFolderPath('Desktop')}
     if (!$desktop -or !(Test-Path -LiteralPath $desktop)) { return }
-    $shell = New-Object -ComObject WScript.Shell
-    foreach ($item in @(@('Paseo SSH 连接.lnk',''),@('Paseo SSH 设置与帮助.lnk',' -Settings'))) {
+    try {
+      $shell = New-Object -ComObject WScript.Shell
+      foreach ($item in @(@('Paseo SSH Connect.lnk',''),@('Paseo SSH Settings.lnk',' -Settings'))) {
         $link = Join-Path $desktop $item[0]
         if (Test-Path -LiteralPath $link) { continue }
         $shortcut = $shell.CreateShortcut($link)
         $shortcut.TargetPath = Join-Path $env:SystemRoot 'System32\WindowsPowerShell\v1.0\powershell.exe'
         $shortcut.Arguments = '-NoProfile -NoExit -ExecutionPolicy Bypass -File "'+$entry+'"'+$item[1]
         $shortcut.WorkingDirectory = $State
+        $shortcut.Description = 'Paseo SSH connection, settings and troubleshooting'
         $shortcut.Save()
     }
-    Write-Host '桌面入口：Paseo SSH 连接 / Paseo SSH 设置与帮助（已有同名入口不覆盖）。'
+      Write-Host '桌面入口：Paseo SSH Connect（连接）/ Paseo SSH Settings（设置与帮助）；已有同名入口不覆盖。'
+    } catch {
+      Write-Warning "无法创建桌面快捷方式，但本地入口已保存：$entry；可用 -Settings 打开设置。"
+    }
 }
 function Read-Settings([string]$State) {
     $file = Join-Path $State 'settings.json'
@@ -303,7 +308,7 @@ if (!$Library) {
                 $ExpectedFingerprint=$answer
             }
             Save-Settings $StateDirectory ([pscustomobject]@{Server=$Server;UserName=$UserName;Port=$Port;IdentityFile=$IdentityFile;Fingerprint=$ExpectedFingerprint})
-            Write-Host '设置已保存。连接请打开桌面「Paseo SSH 连接」。'; return
+            Write-Host '设置已保存。连接请打开桌面「Paseo SSH Connect」。'; return
         }
         $options=[pscustomobject]@{Server=$Server;Port=$Port;UserName=$UserName;IdentityFile=$IdentityFile;ExpectedFingerprint=$ExpectedFingerprint;StateDirectory=$StateDirectory}
         Invoke-PaseoSetup $options (Join-Path $env:USERPROFILE '.ssh\known_hosts')
