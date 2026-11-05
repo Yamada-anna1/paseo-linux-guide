@@ -36,7 +36,7 @@ function walk(dir) {
 const all=walk(root);
 for(const file of all) {
   const relative=path.relative(root,file);
-  if(!/\.(md|json|html|cjs|sh|yml)$|^\.(gitignore|gitattributes)$/.test(relative)) failures.push('Unexpected repository file: '+relative);
+  if(!/\.(md|json|html|cjs|sh|yml|ps1)$|(^|[\\/])\.(gitignore|gitattributes)$/.test(relative)) failures.push('Unexpected repository file: '+relative);
   const text=fs.readFileSync(file,'utf8');
   const secretPatterns=[
     /-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----/,
@@ -45,7 +45,7 @@ for(const file of all) {
     /\b(?:ssh-ed25519|ssh-rsa|ecdsa-sha2-nistp(?:256|384|521))\s+AAAA[A-Za-z0-9+/]{20,}={0,3}/,
   ];
   if(secretPatterns.some(re=>re.test(text))) failures.push('Possible credential in '+relative);
-  if(!relative.startsWith('scripts'+path.sep)) {
+  if(!relative.startsWith('scripts'+path.sep) && !relative.startsWith('windows'+path.sep+'tests'+path.sep)) {
     const ips=text.match(/\b(?:\d{1,3}\.){3}\d{1,3}\b/g)||[];
     if(ips.some(ip=>!['127.0.0.1','0.0.0.0'].includes(ip))) failures.push('Non-example IP in '+relative);
     if(/C:\\+Users\\+(?!WINDOWS_USER\b)[A-Za-z0-9_.-]+/.test(text)) failures.push('Personal Windows home path in '+relative);

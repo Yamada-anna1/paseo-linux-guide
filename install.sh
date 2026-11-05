@@ -2,7 +2,7 @@
 # Interactive Linux installer. Read menu input from a terminal, never from a curl pipe.
 # Upstream scripts are downloaded completely before execution; no keys are collected.
 
-GUIDE_INSTALLER_VERSION='1.3.0'
+GUIDE_INSTALLER_VERSION='2.0.0'
 GUIDE_CODEX_URL='https://chatgpt.com/codex/install.sh'
 GUIDE_CC_URL='https://github.com/SaladDay/cc-switch-cli/releases/latest/download/install.sh'
 GUIDE_NVM_URL='https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.8/install.sh'
@@ -624,7 +624,7 @@ Paseo 手机端找不到 gh：用主菜单 10/11/12；旧 daemon 按需确认后
 GUIDE_SSH_TEST
 }
 
-guide_ssh_menu() {
+guide_ssh_advanced_menu() {
   local guide_ssh_result
   while true; do
     printf '\n%s\n' '========== SSH 排查与配置指引 ==========' \
@@ -650,6 +650,65 @@ guide_ssh_menu() {
   done
 }
 
+guide_ipv4_valid() {
+  local address="$1" octet
+  local -a octets
+  [[ "$address" =~ ^[0-9]{1,3}(\.[0-9]{1,3}){3}$ ]] || return 1
+  IFS=. read -r -a octets <<< "$address"
+  for octet in "${octets[@]}"; do
+    [[ "$octet" == 0 || "$octet" != 0* ]] || return 1
+    ((10#$octet <= 255)) || return 1
+  done
+}
+
+guide_ssh_wizard() {
+  local guide_server guide_login guide_port=22 guide_fingerprint='' guide_host_output='' guide_sshd='' guide_cfg=''
+  guide_login="$(id -un)"
+  [[ "$guide_login" =~ ^[a-z_][a-z0-9_-]{0,31}$ ]] || { guide_error '当前用户名不适合生成命令，请使用高级指引。'; return 1; }
+  printf '\n%s\n' '========== SSH 一键连接准备 ==========' \
+    '此处是 Linux：只读取信息，不修改 SSH 配置、公钥或防火墙。' \
+    '请从你已信任的服务器会话或服务商控制台运行；将自动带入主机指纹。'
+  guide_read '输入这台服务器的公网 IPv4（或 q 返回）：' || return 0
+  guide_server="$GUIDE_REPLY"
+  [[ "$guide_server" != q && "$guide_server" != Q ]] || return 0
+  if ! guide_ipv4_valid "$guide_server"; then guide_error 'IP 格式不正确；不接受网址、命令或带用户名的地址。'; return 1; fi
+  if [[ -n "${SSH_CONNECTION:-}" ]]; then
+    read -r _ _ _ guide_port <<< "$SSH_CONNECTION"
+  fi
+  [[ "$guide_port" =~ ^[0-9]{1,5}$ ]] && ((10#$guide_port >= 1 && 10#$guide_port <= 65535)) || { guide_error '无法识别 SSH 端口，请使用高级指引。'; return 1; }
+  if guide_has sshd; then guide_sshd="$(command -v sshd)"; elif [[ -x /usr/sbin/sshd ]]; then guide_sshd=/usr/sbin/sshd; fi
+  if [[ "$(id -u)" == 0 && -n "$guide_sshd" ]]; then
+    guide_cfg="$("$guide_sshd" -T 2>/dev/null)" || guide_cfg=''
+    if grep -qx 'pubkeyauthentication no' <<< "$guide_cfg"; then
+      guide_error '基础配置禁用了公钥认证。不会自动放宽 SSH 配置，请先由管理员核对实际服务与 Match 规则。'
+      return 1
+    fi
+  fi
+  if guide_has ssh-keygen && [[ -f /etc/ssh/ssh_host_ed25519_key.pub && ! -L /etc/ssh/ssh_host_ed25519_key.pub ]]; then
+    guide_host_output="$(ssh-keygen -E sha256 -lf /etc/ssh/ssh_host_ed25519_key.pub 2>/dev/null)" || guide_host_output=''
+    guide_fingerprint="$(awk 'NR==1 {print $2}' <<< "$guide_host_output")"
+  fi
+  if [[ ! "$guide_fingerprint" =~ ^SHA256:[A-Za-z0-9+/]{43}$ ]]; then
+    guide_error '无法取得 ED25519 主机指纹；未生成自动信任命令。请管理员核对实际 SSH HostKey 配置。'
+    return 1
+  fi
+  printf '\n用户：%s  端口：%s\n服务器主机指纹：%s\n' "$guide_login" "$guide_port" "$guide_fingerprint"
+  printf '%s\n' '下一步只在 Windows PowerShell 执行下面这一整行（不要粘回 Linux）：' \
+    '会下载公开 Windows 工具；验证主机后，按需生成/加载密钥、备份并追加公钥、测试登录。' \
+    '密码/私钥口令只在系统提示中输入，不保存。首次输入 IP 后正常情况下无需再选子步骤。'
+  printf "& ([scriptblock]::Create((irm 'https://raw.githubusercontent.com/Yamada-anna1/paseo-ssh-windows/main/paseo-ssh.ps1'))) -Server '%s' -UserName '%s' -Port %s -ExpectedFingerprint '%s'\n" "$guide_server" "$guide_login" "$guide_port" "$guide_fingerprint"
+  printf '\n%s\n' '找不到设置：Windows 工具会提供桌面「Paseo SSH 连接」「Paseo SSH 设置与帮助」。' \
+    '重装后：再次运行此选项，核对新指纹；不会自动信任网络扫描结果。' \
+    '高级服务配置、自定义 HostKey/AuthorizedKeysFile 或 Match 规则可能需要管理员处理。'
+}
+
+guide_ssh_menu() {
+  guide_ssh_wizard || true
+  guide_read '回车返回主菜单；输入 9 查看原来的高级分步指引：' || return 0
+  [[ "$GUIDE_REPLY" != 9 ]] || guide_ssh_advanced_menu
+  return 0
+}
+
 guide_menu() {
   local guide_result
   while true; do
@@ -668,7 +727,7 @@ guide_menu() {
       ' 11) 登录 GitHub（浏览器设备码授权）' \
       ' 12) 检查 GitHub CLI 和登录状态（只读）' \
       ' 13) 刷新 Paseo 环境（停止后启动，需确认）' \
-      ' 14) SSH 排查与配置指引（只读检查 / 分步操作）' \
+      ' 14) SSH 一键连接准备（输入 IP / 生成 Windows 命令）' \
       '  0) 退出'
     guide_read '输入选项编号并回车：' || break
     guide_result=0

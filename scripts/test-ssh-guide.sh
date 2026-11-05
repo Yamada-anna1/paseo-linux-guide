@@ -59,7 +59,8 @@ ssh_test_print_only() {
 ssh_test_menu() {
   ssh_test_forbid_writes
   guide_ssh_diagnostics() { printf 'readonly-check-called\n'; }
-  printf '14\nbad\n1\n2\n3\n4\n5\n0\n0\n' > "$SSH_TEST_DIR/menu-input"
+  guide_ssh_wizard() { printf 'wizard-called\n'; }
+  printf '14\n9\nbad\n1\n2\n3\n4\n5\n0\n0\n' > "$SSH_TEST_DIR/menu-input"
   exec 9< "$SSH_TEST_DIR/menu-input"
   guide_menu </dev/null > "$SSH_TEST_DIR/menu-output" || ssh_test_fail 'menu return'
   ssh_test_has "$SSH_TEST_DIR/menu-output" 'readonly-check-called'

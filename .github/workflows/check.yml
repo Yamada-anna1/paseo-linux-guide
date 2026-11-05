@@ -1,7 +1,7 @@
 name: Installer and guide checks
 on:
   push:
-    branches: [main]
+    branches: [main, test/ssh-wizard-v2]
   workflow_dispatch:
 permissions:
   contents: read
@@ -22,6 +22,9 @@ jobs:
           done
       - run: bash scripts/test-installer.sh
       - run: bash scripts/test-ssh-guide.sh
+      - run: bash scripts/test-ssh-wizard.sh
+      - run: node windows/scripts/build.cjs --check
+      - run: bash windows/tests/authorize.sh
       - name: Verify piped menu in a real Linux terminal
         run: |
           python3 - <<'PY'
@@ -72,3 +75,25 @@ jobs:
         with:
           persist-credentials: false
       - run: bash scripts/smoke-installer-ci.sh
+  windows:
+    runs-on: windows-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Windows PowerShell 5.1 isolated tests
+        shell: powershell
+        run: ./windows/tests/unit.ps1
+      - name: PowerShell 7 isolated tests
+        shell: pwsh
+        run: ./windows/tests/unit.ps1
+  ssh-e2e:
+    needs: checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - run: bash windows/tests/e2e.sh

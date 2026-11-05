@@ -1,0 +1,30 @@
+name: PowerShell and real SSH tests
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  windows:
+    runs-on: windows-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - run: node scripts/build.cjs --check
+      - shell: powershell
+        run: ./tests/unit.ps1
+      - shell: pwsh
+        run: ./tests/unit.ps1
+  linux:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - run: node scripts/build.cjs --check
+      - run: bash tests/authorize.sh
+      - run: bash tests/e2e.sh
