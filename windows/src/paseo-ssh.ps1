@@ -19,6 +19,11 @@ $script:PaseoSource = if ($PSCommandPath) { [IO.File]::ReadAllText($PSCommandPat
 function Write-Utf8File([string]$Path, [string]$Text) {
     [IO.File]::WriteAllText($Path, $Text, (New-Object Text.UTF8Encoding($false)))
 }
+function Get-NativePath([string]$Name) {
+    $commands = @(Get-Command $Name -CommandType Application -ErrorAction Stop)
+    if (!$commands.Count -or !$commands[0].Source) { throw "找不到程序：$Name" }
+    [string]$commands[0].Source
+}
 function Assert-PlainPath([string]$Path) {
     $part = [IO.Path]::GetFullPath($Path)
     while ($part) {
@@ -182,8 +187,7 @@ function Invoke-PaseoSetup($Options,[string]$KnownHostsFile,[switch]$NoLocalEntr
         $null = [IO.Directory]::CreateDirectory($work)
         $tools = @{}
         foreach ($name in @('ssh','ssh-keyscan','ssh-keygen')) {
-            $command = Get-Command $name -CommandType Application -ErrorAction Stop
-            $tools[$name] = $command.Source
+            $tools[$name] = Get-NativePath $name
         }
         Write-Event $state 'START'
         Write-Host "正在核对服务器：$($Options.Server):$($Options.Port) 用户 $($Options.UserName)"
@@ -230,7 +234,7 @@ function Invoke-PaseoSetup($Options,[string]$KnownHostsFile,[switch]$NoLocalEntr
                 if ($agent -and $agent.Status -ne 'Running' -and $admin) { Set-Service ssh-agent -StartupType Automatic; Start-Service ssh-agent; $agent = Get-Service ssh-agent }
                 if ($agent -and $agent.Status -eq 'Running') {
                     Write-Host '将现有密钥加载到本机 agent；若有私钥口令，请在 ssh-add 提示中输入。'
-                    $addTool = (Get-Command ssh-add -CommandType Application -ErrorAction Stop).Source
+                    $addTool = Get-NativePath 'ssh-add'
                     $added = Invoke-Native $addTool @($Options.IdentityFile) -Interactive
                     if ($added.Code -ne 0) { throw 'ssh-add 未成功，未追加服务器授权。' }
                     $test = Invoke-Native $tools['ssh'] ($batchArgs+@('echo PASEO_SSH_OK'))

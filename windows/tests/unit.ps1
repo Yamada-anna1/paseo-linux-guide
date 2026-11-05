@@ -10,7 +10,7 @@ function Case([string]$Name,[scriptblock]$Body) { & $Body; $script:Pass++; Write
 function Must-Fail([scriptblock]$Body,[string]$Pattern) { $failed=$false; try { & $Body } catch { $failed=$true; Check ($_.Exception.Message -match $Pattern) ('Wrong error: '+$_.Exception.Message) }; Check $failed 'Expected rejection' }
 function Get-Service { return $null } # Never touch the real user's agent in these offline tests.
 try {
-    $keygen=(Get-Command ssh-keygen -CommandType Application).Source
+    $keygen=Get-NativePath 'ssh-keygen'
     $fixture=Join-Path $suite 'fixture'
     $result=& $script:RealNative $keygen @('-q','-t','ed25519','-N','','-f',$fixture)
     Check ($result.Code -eq 0) ('Fixture key generation failed: '+$result.Err)
@@ -24,6 +24,18 @@ try {
         foreach($bad in @('127.0.0.1;whoami','-oProxyCommand=x','127.1','001.2.3.4','example.invalid','::1')) { Must-Fail { Assert-Connection $bad 22 'root' } 'IPv4' }
         Must-Fail { Assert-Connection '127.0.0.1' 0 'root' } '1'
         Must-Fail { Assert-Connection '127.0.0.1' 22 'root;id' } '.'
+    }
+    Case 'multiple native applications resolve to exactly one existing executable' {
+        foreach($name in @('ssh','ssh-keygen','ssh-keyscan')) {
+            $resolved=Get-NativePath $name
+            Check ($resolved -is [string] -and (Test-Path -LiteralPath $resolved -PathType Leaf)) ('bad executable: '+$name)
+            Check ($resolved -ceq @(Get-Command $name -CommandType Application)[0].Source) 'not first executable'
+        }
+    }
+    Case 'download-style scriptblock entry parses and preserves reusable source' {
+        $source=[IO.File]::ReadAllText((Join-Path $root 'paseo-ssh.ps1'))
+        & ([scriptblock]::Create($source)) -Library
+        Check ($script:PaseoSource.Contains('function Invoke-PaseoSetup')) 'entry source not captured'
     }
     Case 'public key validator rejects private files, multiline and spoofed binary type' {
         Must-Fail { Get-Ed25519Info ([IO.File]::ReadAllText($fixture)) } '.'
